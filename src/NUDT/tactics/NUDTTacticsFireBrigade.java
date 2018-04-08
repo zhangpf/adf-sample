@@ -16,7 +16,7 @@ import adf.component.centralized.CommandExecutor;
 import adf.component.communication.CommunicationMessage;
 import adf.component.extaction.ExtAction;
 import adf.component.module.complex.Search;
-import adf.sample.tactics.utils.MessageTool;
+import NUDT.tactics.utils.MessageTool;
 import rescuecore2.standard.entities.*;
 import rescuecore2.worldmodel.EntityID;
 
@@ -74,20 +74,20 @@ public class NUDTTacticsFireBrigade extends TacticsFireBrigade
         {
             case PRECOMPUTATION_PHASE:
             case PRECOMPUTED:
-                this.search = moduleManager.getModule("TacticsFireBrigade.Search", "NUDT.module.complex.SampleSearch");
-                this.buildingDetector = moduleManager.getModule("TacticsFireBrigade.BuildingDetector", "NUDT.module.complex.SampleBuildingDetector");
-                this.actionFireFighting = moduleManager.getExtAction("TacticsFireBrigade.ActionFireFighting", "NUDT.extaction.ActionFireFighting");
-                this.actionExtMove = moduleManager.getExtAction("TacticsFireBrigade.ActionExtMove", "NUDT.extaction.ActionExtMove");
-                this.commandExecutorFire = moduleManager.getCommandExecutor("TacticsFireBrigade.CommandExecutorFire", "NUDT.centralized.CommandExecutorFire");
-                this.commandExecutorScout = moduleManager.getCommandExecutor("TacticsFireBrigade.CommandExecutorScout", "NUDT.centralized.CommandExecutorScout");
+                this.search = moduleManager.getModule("TacticsFireBrigade.Search", "adf.sample.module.complex.SampleSearch");
+                this.buildingDetector = moduleManager.getModule("TacticsFireBrigade.BuildingDetector", "adf.sample.module.complex.SampleBuildingDetector");
+                this.actionFireFighting = moduleManager.getExtAction("TacticsFireBrigade.ActionFireFighting", "adf.sample.extaction.ActionFireFighting");
+                this.actionExtMove = moduleManager.getExtAction("TacticsFireBrigade.ActionExtMove", "adf.sample.extaction.ActionExtMove");
+                this.commandExecutorFire = moduleManager.getCommandExecutor("TacticsFireBrigade.CommandExecutorFire", "adf.sample.centralized.CommandExecutorFire");
+                this.commandExecutorScout = moduleManager.getCommandExecutor("TacticsFireBrigade.CommandExecutorScout", "adf.sample.centralized.CommandExecutorScout");
                 break;
             case NON_PRECOMPUTE:
-                this.search = moduleManager.getModule("TacticsFireBrigade.Search", "NUDT.module.complex.SampleSearch");
-                this.buildingDetector = moduleManager.getModule("TacticsFireBrigade.BuildingDetector", "NUDT.module.complex.SampleBuildingDetector");
-                this.actionFireFighting = moduleManager.getExtAction("TacticsFireBrigade.ActionFireFighting", "NUDT.extaction.ActionFireFighting");
-                this.actionExtMove = moduleManager.getExtAction("TacticsFireBrigade.ActionExtMove", "NUDT.extaction.ActionExtMove");
-                this.commandExecutorFire = moduleManager.getCommandExecutor("TacticsFireBrigade.CommandExecutorFire", "NUDT.centralized.CommandExecutorFire");
-                this.commandExecutorScout = moduleManager.getCommandExecutor("TacticsFireBrigade.CommandExecutorScout", "NUDT.centralized.CommandExecutorScout");
+                this.search = moduleManager.getModule("TacticsFireBrigade.Search", "adf.sample.module.complex.SampleSearch");
+                this.buildingDetector = moduleManager.getModule("TacticsFireBrigade.BuildingDetector", "adf.sample.module.complex.SampleBuildingDetector");
+                this.actionFireFighting = moduleManager.getExtAction("TacticsFireBrigade.ActionFireFighting", "adf.sample.extaction.ActionFireFighting");
+                this.actionExtMove = moduleManager.getExtAction("TacticsFireBrigade.ActionExtMove", "adf.sample.extaction.ActionExtMove");
+                this.commandExecutorFire = moduleManager.getCommandExecutor("TacticsFireBrigade.CommandExecutorFire", "adf.sample.centralized.CommandExecutorFire");
+                this.commandExecutorScout = moduleManager.getCommandExecutor("TacticsFireBrigade.CommandExecutorScout", "adf.sample.centralized.CommandExecutorScout");
                 break;
         }
 

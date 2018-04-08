@@ -53,7 +53,7 @@ public class NUDTTacticsAmbulanceCentre extends TacticsAmbulanceCentre
             	*/
             	this.allocator = moduleManager.getModule(
             			"TacticsAmbulanceCentre.TargetAllocator",
-            			"NUDT.module.complex.NUDTAmbulanceTargetAllocator");
+            			"adf.sample.module.complex.NUDTAmbulanceTargetAllocator");
             	this.picker = moduleManager.getCommandPicker(
                         "TacticsAmbulanceCentre.CommandPicker",
                         "adf.sample.centralized.CommandPickerAmbulance");
@@ -66,7 +66,7 @@ public class NUDTTacticsAmbulanceCentre extends TacticsAmbulanceCentre
                 */
             	this.allocator = moduleManager.getModule(
             			"TacticsAmbulanceCentre.TargetAllocator",
-            			"NUDT.module.complex.NUDTAmbulanceTargetAllocator");
+            			"adf.sample.module.complex.NUDTAmbulanceTargetAllocator");
                 this.picker = moduleManager.getCommandPicker(
                         "TacticsAmbulanceCentre.CommandPicker",
                         "adf.sample.centralized.CommandPickerAmbulance");

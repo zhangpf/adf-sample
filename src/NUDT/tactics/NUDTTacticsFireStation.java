@@ -32,18 +32,18 @@ public class NUDTTacticsFireStation extends TacticsFireStation
             case PRECOMPUTED:
                 this.allocator = moduleManager.getModule(
                         "TacticsFireStation.TargetAllocator",
-                        "NUDT.module.complex.SampleFireTargetAllocator");
+                        "adf.sample.module.complex.SampleFireTargetAllocator");
                 this.picker = moduleManager.getCommandPicker(
                         "TacticsFireStation.CommandPicker",
-                        "NUDT.centralized.CommandPickerFire");
+                        "adf.sample.centralized.CommandPickerFire");
                 break;
             case NON_PRECOMPUTE:
                 this.allocator = moduleManager.getModule(
                         "TacticsFireStation.TargetAllocator",
-                        "NUDT.module.complex.SampleFireTargetAllocator");
+                        "adf.sample.module.complex.SampleFireTargetAllocator");
                 this.picker = moduleManager.getCommandPicker(
                         "TacticsFireStation.CommandPicker",
-                        "NUDT.centralized.CommandPickerFire");
+                        "adf.sample.centralized.CommandPickerFire");
 
         }
         registerModule(this.allocator);

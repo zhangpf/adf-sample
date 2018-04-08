@@ -21,7 +21,7 @@ import adf.component.extaction.ExtAction;
 import adf.component.module.complex.RoadDetector;
 import adf.component.module.complex.Search;
 import adf.component.tactics.TacticsPoliceForce;
-import adf.sample.tactics.utils.MessageTool;
+import NUDT.tactics.utils.MessageTool;
 import rescuecore2.standard.entities.*;
 import rescuecore2.worldmodel.EntityID;
 
@@ -74,20 +74,20 @@ public class NUDTTacticsPoliceForce extends TacticsPoliceForce
         {
             case PRECOMPUTATION_PHASE:
             case PRECOMPUTED:
-                this.search = moduleManager.getModule("TacticsPoliceForce.Search", "NUDT.module.complex.SampleSearch");
-                this.roadDetector = moduleManager.getModule("TacticsPoliceForce.RoadDetector", "NUDT.module.complex.SampleRoadDetector");
-                this.actionExtClear = moduleManager.getExtAction("TacticsPoliceForce.ActionExtClear", "NUDT.extaction.ActionExtClear");
-                this.actionExtMove = moduleManager.getExtAction("TacticsPoliceForce.ActionExtMove", "NUDT.extaction.ActionExtMove");
-                this.commandExecutorPolice = moduleManager.getCommandExecutor("TacticsPoliceForce.CommandExecutorPolice", "NUDT.centralized.CommandExecutorPolice");
-                this.commandExecutorScout = moduleManager.getCommandExecutor("TacticsPoliceForce.CommandExecutorScout", "NUDT.centralized.CommandExecutorScoutPolice");
+                this.search = moduleManager.getModule("TacticsPoliceForce.Search", "adf.sample.module.complex.SampleSearch");
+                this.roadDetector = moduleManager.getModule("TacticsPoliceForce.RoadDetector", "adf.sample.module.complex.SampleRoadDetector");
+                this.actionExtClear = moduleManager.getExtAction("TacticsPoliceForce.ActionExtClear", "adf.sample.extaction.ActionExtClear");
+                this.actionExtMove = moduleManager.getExtAction("TacticsPoliceForce.ActionExtMove", "adf.sample.extaction.ActionExtMove");
+                this.commandExecutorPolice = moduleManager.getCommandExecutor("TacticsPoliceForce.CommandExecutorPolice", "adf.sample.centralized.CommandExecutorPolice");
+                this.commandExecutorScout = moduleManager.getCommandExecutor("TacticsPoliceForce.CommandExecutorScout", "adf.sample.centralized.CommandExecutorScoutPolice");
                 break;
             case NON_PRECOMPUTE:
-                this.search = moduleManager.getModule("TacticsPoliceForce.Search", "NUDT.module.complex.SampleSearch");
-                this.roadDetector = moduleManager.getModule("TacticsPoliceForce.RoadDetector", "NUDT.module.complex.SampleRoadDetector");
-                this.actionExtClear = moduleManager.getExtAction("TacticsPoliceForce.ActionExtClear", "NUDT.extaction.ActionExtClear");
-                this.actionExtMove = moduleManager.getExtAction("TacticsPoliceForce.ActionExtMove", "NUDT.extaction.ActionExtMove");
-                this.commandExecutorPolice = moduleManager.getCommandExecutor("TacticsPoliceForce.CommandExecutorPolice", "NUDT.centralized.CommandExecutorPolice");
-                this.commandExecutorScout = moduleManager.getCommandExecutor("TacticsPoliceForce.CommandExecutorScout", "NUDT.centralized.CommandExecutorScoutPolice");
+                this.search = moduleManager.getModule("TacticsPoliceForce.Search", "adf.sample.module.complex.SampleSearch");
+                this.roadDetector = moduleManager.getModule("TacticsPoliceForce.RoadDetector", "adf.sample.module.complex.SampleRoadDetector");
+                this.actionExtClear = moduleManager.getExtAction("TacticsPoliceForce.ActionExtClear", "adf.sample.extaction.ActionExtClear");
+                this.actionExtMove = moduleManager.getExtAction("TacticsPoliceForce.ActionExtMove", "adf.sample.extaction.ActionExtMove");
+                this.commandExecutorPolice = moduleManager.getCommandExecutor("TacticsPoliceForce.CommandExecutorPolice", "adf.sample.centralized.CommandExecutorPolice");
+                this.commandExecutorScout = moduleManager.getCommandExecutor("TacticsPoliceForce.CommandExecutorScout", "adf.sample.centralized.CommandExecutorScoutPolice");
                 break;
         }
         registerModule(this.search);

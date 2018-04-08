@@ -32,18 +32,18 @@ public class NUDTTacticsPoliceOffice extends TacticsPoliceOffice
             case PRECOMPUTED:
                 this.allocator = moduleManager.getModule(
                         "TacticsPoliceOffice.TargetAllocator",
-                        "NUDT.module.complex.SamplePoliceTargetAllocator");
+                        "adf.sample.module.complex.SamplePoliceTargetAllocator");
                 this.picker = moduleManager.getCommandPicker(
                         "TacticsPoliceOffice.CommandPicker",
-                        "NUDT.centralized.CommandPickerPolice");
+                        "adf.sample.centralized.CommandPickerPolice");
                 break;
             case NON_PRECOMPUTE:
                 this.allocator = moduleManager.getModule(
                         "TacticsPoliceOffice.TargetAllocator",
-                        "NUDT.module.complex.SamplePoliceTargetAllocator");
+                        "adf.sample.module.complex.SamplePoliceTargetAllocator");
                 this.picker = moduleManager.getCommandPicker(
                         "TacticsPoliceOffice.CommandPicker",
-                        "NUDT.centralized.CommandPickerPolice");
+                        "adf.sample.centralized.CommandPickerPolice");
         }
         registerModule(this.allocator);
         registerModule(this.picker);

@@ -23,7 +23,7 @@ import adf.component.extaction.ExtAction;
 import adf.component.module.complex.HumanDetector;
 import adf.component.module.complex.Search;
 import adf.component.tactics.TacticsAmbulanceTeam;
-import adf.sample.tactics.utils.MessageTool;
+import NUDT.tactics.utils.MessageTool;
 import rescuecore2.standard.entities.AmbulanceTeam;
 import rescuecore2.standard.entities.StandardEntityURN;
 import rescuecore2.worldmodel.EntityID;
@@ -79,20 +79,20 @@ public class NUDTTacticsAmbulanceTeam extends TacticsAmbulanceTeam
         {
             case PRECOMPUTATION_PHASE:
             case PRECOMPUTED:
-                this.humanDetector = moduleManager.getModule("TacticsAmbulanceTeam.HumanDetector", "NUDT.module.complex.NUDTHumanDetector");
-                this.search = moduleManager.getModule("TacticsAmbulanceTeam.Search", "NUDT.module.complex.SampleSearch");
-                this.actionTransport = moduleManager.getExtAction("TacticsAmbulanceTeam.ActionTransport", "NUDT.extaction.ActionTransport");
-                this.actionExtMove = moduleManager.getExtAction("TacticsAmbulanceTeam.ActionExtMove", "NUDT.extaction.ActionExtMove");
-                this.commandExecutorAmbulance = moduleManager.getCommandExecutor("TacticsAmbulanceTeam.CommandExecutorAmbulance", "NUDT.centralized.CommandExecutorAmbulance");
-                this.commandExecutorScout = moduleManager.getCommandExecutor("TacticsAmbulanceTeam.CommandExecutorScout", "NUDT.centralized.CommandExecutorScout");
+                this.humanDetector = moduleManager.getModule("TacticsAmbulanceTeam.HumanDetector", "adf.sample.module.complex.SampleHumanDetector");
+                this.search = moduleManager.getModule("TacticsAmbulanceTeam.Search", "adf.sample.module.complex.SampleSearch");
+                this.actionTransport = moduleManager.getExtAction("TacticsAmbulanceTeam.ActionTransport", "adf.sample.extaction.ActionTransport");
+                this.actionExtMove = moduleManager.getExtAction("TacticsAmbulanceTeam.ActionExtMove", "adf.sample.extaction.ActionExtMove");
+                this.commandExecutorAmbulance = moduleManager.getCommandExecutor("TacticsAmbulanceTeam.CommandExecutorAmbulance", "adf.sample.centralized.CommandExecutorAmbulance");
+                this.commandExecutorScout = moduleManager.getCommandExecutor("TacticsAmbulanceTeam.CommandExecutorScout", "adf.sample.centralized.CommandExecutorScout");
                 break;
             case NON_PRECOMPUTE:
-                this.humanDetector = moduleManager.getModule("TacticsAmbulanceTeam.HumanDetector", "NUDT.module.complex.SampleHumanDetector");
-                this.search = moduleManager.getModule("TacticsAmbulanceTeam.Search", "NUDT.module.complex.SampleSearch");
-                this.actionTransport = moduleManager.getExtAction("TacticsAmbulanceTeam.ActionTransport", "NUDT.extaction.ActionTransport");
-                this.actionExtMove = moduleManager.getExtAction("TacticsAmbulanceTeam.ActionExtMove", "NUDT.extaction.ActionExtMove");
-                this.commandExecutorAmbulance = moduleManager.getCommandExecutor("TacticsAmbulanceTeam.CommandExecutorAmbulance", "NUDT.centralized.CommandExecutorAmbulance");
-                this.commandExecutorScout = moduleManager.getCommandExecutor("TacticsAmbulanceTeam.CommandExecutorScout", "NUDT.centralized.CommandExecutorScout");
+                this.humanDetector = moduleManager.getModule("TacticsAmbulanceTeam.HumanDetector", "adf.sample.module.complex.SampleHumanDetector");
+                this.search = moduleManager.getModule("TacticsAmbulanceTeam.Search", "adf.sample.module.complex.SampleSearch");
+                this.actionTransport = moduleManager.getExtAction("TacticsAmbulanceTeam.ActionTransport", "adf.sample.extaction.ActionTransport");
+                this.actionExtMove = moduleManager.getExtAction("TacticsAmbulanceTeam.ActionExtMove", "adf.sample.extaction.ActionExtMove");
+                this.commandExecutorAmbulance = moduleManager.getCommandExecutor("TacticsAmbulanceTeam.CommandExecutorAmbulance", "adf.sample.centralized.CommandExecutorAmbulance");
+                this.commandExecutorScout = moduleManager.getCommandExecutor("TacticsAmbulanceTeam.CommandExecutorScout", "adf.sample.centralized.CommandExecutorScout");
         }
         registerModule(this.humanDetector);
         registerModule(this.search);

@@ -1,4 +1,4 @@
-package adf.sample.tactics.utils;
+package NUDT.tactics.utils;
 
 import adf.agent.communication.MessageManager;
 import adf.agent.communication.standard.bundle.MessageUtil;
