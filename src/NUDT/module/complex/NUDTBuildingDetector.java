@@ -1,6 +1,5 @@
 package NUDT.module.complex;
 
-
 import adf.agent.communication.MessageManager;
 import adf.agent.communication.standard.bundle.MessageUtil;
 import adf.agent.communication.standard.bundle.centralized.CommandPolice;
@@ -18,19 +17,42 @@ import adf.component.module.complex.BuildingDetector;
 import rescuecore2.misc.geometry.Point2D;
 import rescuecore2.misc.geometry.Vector2D;
 import rescuecore2.standard.entities.*;
+import rescuecore2.standard.entities.StandardEntityConstants.Fieryness;
+import rescuecore2.worldmodel.ChangeSet;
 import rescuecore2.worldmodel.EntityID;
 
 import java.util.*;
+
+import NUDT.module.complex.utils.EnergyFlow;
+import NUDT.module.complex.utils.FireBrigadeTools;
+import NUDT.module.complex.utils.WorldTools;
 
 import static rescuecore2.standard.entities.StandardEntityURN.*;
 
 public class NUDTBuildingDetector extends BuildingDetector
 {
 
+	private EntityID result;
+	private EnergyFlow energyFlow;
+	
 	public NUDTBuildingDetector(AgentInfo ai, WorldInfo wi, ScenarioInfo si, ModuleManager moduleManager,
 			DevelopData developData) {
 		super(ai, wi, si, moduleManager, developData);
-		// TODO Auto-generated constructor stub
+		
+		switch (si.getMode())
+        {
+            case PRECOMPUTATION_PHASE:
+                this.energyFlow = moduleManager.getModule("NUDTBuildingDetector.EnergyFlow", "NUDT.module.complex.utils.EnergyFlow");
+                break;
+            case PRECOMPUTED:
+            	this.energyFlow = moduleManager.getModule("NUDTBuildingDetector.EnergyFlow", "NUDT.module.complex.utils.EnergyFlow");
+                break;
+            case NON_PRECOMPUTE:
+                this.energyFlow = moduleManager.getModule("NUDTBuildingDetector.EnergyFlow", "NUDT.module.complex.utils.EnergyFlow");
+                break;
+        }
+		
+		registerModule(this.energyFlow);
 	}
 
 	@Override
@@ -38,6 +60,119 @@ public class NUDTBuildingDetector extends BuildingDetector
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	/**
+	 * 从能看到的建筑中，挑选一个着火的并且最容易灭火的建筑
+	 * @return
+	 */
+	private Building selectOneBuildingFromViewsightForExtinguishing() {
+		
+		
+		/* the building with minimum extinguish difficulty.*/
+		Building minDifficultyBuilding = null;
+		/* the minimum extinguish difficulty*/
+		double minDifficulty = Integer.MAX_VALUE;
+		/* the energy minDifficultyBuilding released to outside world*/
+		double minDifficultyAffect = 0.0;
+		
+		for (EntityID id : this.worldInfo.getFireBuildingIDs()) {
+			StandardEntity se = this.worldInfo.getEntity(id);
+			if (se instanceof Building){
+				Building building = (Building) se;
+				/* total area of this building*/
+				double area = (building.isTotalAreaDefined()) ? building.getTotalArea() : 1.0;
+				/* the energy gained from outside world of this building*/
+				double affected = this.energyFlow.getIn(building);
+				/* the extinguish difficulty of this building*/
+				double difficulty = area * affected;
+				
+				if (this.worldInfo.getFireBuildings().contains(building) && difficulty < minDifficulty) {
+					minDifficultyBuilding = building;
+					minDifficulty = difficulty;//
+					minDifficultyAffect = this.energyFlow.getOut(building);
+				}else if (Math.abs(minDifficulty - difficulty) < 500.0) {
+					/* 
+					 * If two building has colser extinguish difficulty, then compare the energy they
+					 * released to outside world. The building which release more energy is the new
+					 * minimum extinguish difficulty building.
+					 */
+					double affect = this.energyFlow.getOut(building);
+					if (minDifficultyAffect < affect) {
+						minDifficultyBuilding = building;
+						minDifficulty = difficulty;
+						minDifficultyAffect = this.energyFlow.getOut(building);
+					}
+				}
+			}
+		}
+		
+		return minDifficultyBuilding;
+	}
+	
+	/**
+	 * 世界中视野外的建筑信息是通过radio得知的，
+	 * 该方法尝试从世界中挑选一个着火的建筑并且灭火难度小的建筑
+	 * @return
+	 */
+	private Building selectOneBuildingFromRadioForExtinguishing() 
+	{
+		Building minDifficultyBuilding = null;
+		double minDifficulty = Integer.MAX_VALUE;
+		double minDifficultyAffect = 0.0;
+		
+		for (Building building : this.worldInfo.getFireBuildings()) 
+		{
+			if (!FireBrigadeTools.canExtinguish(this.agentInfo.me(), building, this.worldInfo)
+					|| this.agentInfo.getTime() - WorldTools.getLastChangeTimeOfEntity(building.getID(), this.agentInfo, this.worldInfo) >= 3) {
+				continue;
+			}
+			if (building.isFierynessDefined() && building.getFierynessEnum() == Fieryness.INFERNO) {
+				continue;
+			}
+			double area = (building.isTotalAreaDefined()) ? building.getTotalArea() : 1.0;
+			double affected = this.energyFlow.getIn(building);
+			double difficulty = area * affected;
+			
+			if (this.worldInfo.getFireBuildings().contains(building) && difficulty < minDifficulty) {
+				minDifficultyBuilding = building;
+				minDifficulty = difficulty;
+				minDifficultyAffect = this.energyFlow.getOut(building);
+			} else if (Math.abs(minDifficulty - difficulty) < 500.0) {
+				double affect = this.energyFlow.getOut(building);
+				if (minDifficultyAffect < affect) {
+					minDifficultyBuilding = building;
+					minDifficulty = difficulty;
+					minDifficultyAffect = this.energyFlow.getOut(building);
+				}
+			}
+		}
+		
+		return minDifficultyBuilding;
+	}
+	
+	/**
+	 * 当消防员被困住时，从自己的“灭火范围”内选一个建筑
+	 * @return
+	 */
+	private Building selectOneBuildingInRangeForExtinguishingWhenStucked() 
+	{
+		final int extinguishableDistance = this.scenarioInfo.getFireExtinguishMaxDistance();
+		for (StandardEntity se : this.worldInfo.getObjectsInRange(this.agentInfo.me(), extinguishableDistance)) {
+			if (se instanceof Building) {
+				Building building = (Building) se;
+				if (building.getFieryness() > 0 && building.getFieryness() < 4) {
+					System.out.println("Agent: " + this.agentInfo.me() + " is error extinguishing in time: " 
+						     + this.agentInfo.getTime() + " ----- class:CsuOldBasedActionStrategy, method: errorExtinguish()");
+					return building;
+				}
+			}
+		}
+		System.out.println("In time: " + this.agentInfo.getTime() + " Agent: " + this.agentInfo.me() + " can not " +
+				"error extinguish and leave.  ----- class:CsuOldBasedActionStrategy, method: errorExtinguish()");
+		// underlyingAgent.move(underlyingAgent.getCannotLeaveBuildingEntrance());
+		return null;
+	}
+	
 
 	@Override
 	public EntityID getTarget() {
