@@ -82,7 +82,7 @@ public class EnergyFlow extends AbstractModule {
 
 	public void update(ChangeSet change) {
 		inFlow.clear();
-		Set<Building> onFireBuildings = WorldTools.getOnFireBuildings(this.worldInfo);
+		Collection<Building> onFireBuildings = this.worldInfo.getFireBuildings();
 		for (Building building : onFireBuildings) {
 			final double lineAffecct = calcurateLineHits(building);
 			outFlow.put(building, lineAffecct);

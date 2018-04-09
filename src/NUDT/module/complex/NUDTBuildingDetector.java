@@ -58,7 +58,7 @@ public class NUDTBuildingDetector extends BuildingDetector
 	@Override
 	public BuildingDetector calc() {
 		// TODO Auto-generated method stub
-		return null;
+		return this;
 	}
 	
 	/**
@@ -110,11 +110,10 @@ public class NUDTBuildingDetector extends BuildingDetector
 	}
 	
 	/**
-	 * 世界中视野外的建筑信息是通过radio得知的，
-	 * 该方法尝试从世界中挑选一个着火的建筑并且灭火难度小的建筑
+	 * 该方法尝试从世界中挑选一个自己能“够得着”的着火的并且灭火难度小的建筑
 	 * @return
 	 */
-	private Building selectOneBuildingFromRadioForExtinguishing() 
+	private Building selectOneBuildingFromWorldForExtinguishing() 
 	{
 		Building minDifficultyBuilding = null;
 		double minDifficulty = Integer.MAX_VALUE;
@@ -173,11 +172,40 @@ public class NUDTBuildingDetector extends BuildingDetector
 		return null;
 	}
 	
+	private Building selectOneBuildingForMovingTo()
+	{
+		if (this.worldInfo.getFireBuildings().isEmpty()){
+			System.out.println("Agent: " + this.agentInfo.me() + " has no burning building in his world model " +
+				"----- time: " + this.agentInfo.getTime() + ", class: CsuOldBasedActionStrategy, method: moveToFires()");
+			return null;
+		}
+		
+		Building minValueBuilding = null;
+		double minValue = Integer.MAX_VALUE;
+		
+		for (Building building : this.worldInfo.getFireBuildings()) {
+			final double affect = this.energyFlow.getOut(building);
+			final double distance = this.worldInfo.getDistance(building, this.agentInfo.me());
+			final double value = affect * distance;
+			
+			if (value < minValue) {
+				minValueBuilding = building;
+				minValue = value;
+			}
+		}
+		if (minValueBuilding != null) {
+			System.out.println("Agent: " + this.agentInfo.me()+ " moving to a burning building in his world model " +
+					"----- time: " + this.agentInfo.getTime() + ", class: CsuOldBasedActionStrategy, method: moveToFires()");
+			return minValueBuilding;
+		}
+		System.out.println("In time: " + this.agentInfo.getTime() + " Agent: " + this.agentInfo.me() + " can not find " +
+				"a burning building to move. ----- class: CsuOldBasedActionStrategy, method: moveToFires()");
+		return null;
+	}
 
 	@Override
 	public EntityID getTarget() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.result;
 	}
 	
 }

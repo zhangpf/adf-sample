@@ -4,8 +4,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.sun.xml.internal.stream.Entity;
-
 import adf.agent.info.AgentInfo;
 import adf.agent.info.WorldInfo;
 import rescuecore2.standard.entities.Building;
@@ -14,7 +12,6 @@ import rescuecore2.standard.entities.StandardEntityURN;
 import rescuecore2.worldmodel.ChangeSet;
 import rescuecore2.worldmodel.EntityID;
 import rescuecore2.worldmodel.Property;
-import sun.nio.cs.HistoricallyNamedCharset;
 
 /**
  * 扩展WorldInfo类的功能的静态方法集合
@@ -29,7 +26,7 @@ public class WorldTools {
 		if (sc != null) {
 			return sc.getChangedEntities();
 		}
-		else { }
+
 		return null;
 	}
 	
@@ -65,7 +62,12 @@ public class WorldTools {
 		return 0;
 	}
 	
-	
+	/**
+	 * 通过属性判断两个实体（当前时刻的entity与若干时刻前的该entity，historyEntity是从worldInfo中的rollback属性中恢复出来的）是否相等
+	 * @param currentEntity
+	 * @param historyEntity
+	 * @return
+	 */
 	private static boolean isEntityChanged(StandardEntity currentEntity, StandardEntity historyEntity)
 	{
 		if(currentEntity.getID().getValue() != historyEntity.getID().getValue())
