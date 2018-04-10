@@ -1,4 +1,4 @@
-package NUDT.module.algorithm;
+package NUDT.module.algorithm.pathplanning;
 
 import adf.agent.communication.MessageManager;
 import adf.agent.develop.DevelopData;

@@ -56,8 +56,33 @@ public class NUDTBuildingDetector extends BuildingDetector
 	}
 
 	@Override
-	public BuildingDetector calc() {
-		// TODO Auto-generated method stub
+	public BuildingDetector calc() 
+	{	
+		EntityID tmp = this.selectOneBuildingFromViewsightForExtinguishing().getID();
+		if(tmp != null)
+		{
+			this.result = tmp;
+			return this;
+		}
+		tmp = this.selectOneBuildingFromWorldForExtinguishing().getID();
+		if(tmp != null)
+		{
+			this.result = tmp;
+			return this;
+		}
+		tmp = this.selectOneBuildingInRangeForExtinguishingWhenStucked().getID();
+		if(tmp != null)
+		{
+			this.result = tmp;
+			return this;
+		}
+		tmp = this.selectOneBuildingForMovingTo().getID();
+		if(tmp != null)
+		{
+			this.result = tmp;
+			return this;
+		}
+		this.result = null;
 		return this;
 	}
 	
