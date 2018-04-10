@@ -14,6 +14,10 @@ import math.geom2d.polygon.Polygon2D;
 import math.geom2d.polygon.convhull.JarvisMarch2D;
 
 /**
+ * 提供3类方法：
+ * 1. 向凸包中加点
+ * 2. 删除凸包中的点
+ * 3. 得到最新的凸包
  * Implementation of Convex Hull using Graham Scan, Jarvis March and On-line
  * Chan's algorithm.
  * 

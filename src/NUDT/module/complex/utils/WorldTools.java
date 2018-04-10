@@ -6,9 +6,14 @@ import java.util.Set;
 
 import adf.agent.info.AgentInfo;
 import adf.agent.info.WorldInfo;
+import NUDT.utils.geom.CompositeConvexHull;
+import NUDT.utils.geom.PolygonScaler;
+import javolution.util.FastSet;
+import rescuecore2.misc.Pair;
 import rescuecore2.standard.entities.Building;
 import rescuecore2.standard.entities.StandardEntity;
 import rescuecore2.standard.entities.StandardEntityURN;
+import rescuecore2.standard.entities.StandardWorldModel;
 import rescuecore2.worldmodel.ChangeSet;
 import rescuecore2.worldmodel.EntityID;
 import rescuecore2.worldmodel.Property;
@@ -93,5 +98,26 @@ public class WorldTools {
 		//如果所有属性都相同，返回false
 		return false;
 	}
+	
+	/**
+     * This method used to find all border building of this world.
+     * 
+     * @return a set of border building of this world
+     */
+    public static Set<StandardEntity> findBorderBuilding (double scale, StandardWorldModel world) {
+    	CompositeConvexHull convexHull = new CompositeConvexHull();
+    	Set<StandardEntity> allEntities = new FastSet<StandardEntity>();
+    	for (StandardEntity entity : world) {
+			if (entity instanceof Building) {
+				allEntities.add(entity);
+				Pair<Integer, Integer> location = entity.getLocation(world);
+				convexHull.addPoint(location.first(), location.second());
+			}
+    	}
+  
+    	Set<StandardEntity> borderBuilding = 
+    			PolygonScaler.getMapBorderBuildings(convexHull, allEntities, scale, world);
+    	return borderBuilding;
+    }
 	
 }

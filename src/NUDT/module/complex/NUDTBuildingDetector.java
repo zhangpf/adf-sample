@@ -23,8 +23,8 @@ import rescuecore2.worldmodel.EntityID;
 
 import java.util.*;
 
-import NUDT.module.complex.utils.EnergyFlow;
-import NUDT.module.complex.utils.FireBrigadeTools;
+import NUDT.module.complex.utils.FireBrigadeTools.EnergyFlow;
+import NUDT.module.complex.utils.FireBrigadeTools.FireBrigadeTools;
 import NUDT.module.complex.utils.WorldTools;
 
 import static rescuecore2.standard.entities.StandardEntityURN.*;

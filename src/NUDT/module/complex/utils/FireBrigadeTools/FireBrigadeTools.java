@@ -1,4 +1,4 @@
-package NUDT.module.complex.utils;
+package NUDT.module.complex.utils.FireBrigadeTools;
 
 import rescuecore2.standard.entities.FireBrigade;
 import rescuecore2.standard.entities.StandardEntity;
