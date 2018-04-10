@@ -1,6 +1,7 @@
 package NUDT.module.complex.utils;
 
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -25,6 +26,15 @@ import rescuecore2.worldmodel.Property;
  */
 public class WorldTools {
 	
+	
+	
+	public static Collection<StandardEntity> getEntitiesOfType(EnumSet<StandardEntityURN> urns, StandardWorldModel world) {
+		Collection<StandardEntity> res = new HashSet<StandardEntity>();
+		for (StandardEntityURN urn : urns) {
+			res.addAll(world.getEntitiesOfType(urn));
+		}
+		return res;
+	}
 
 	public static Set<EntityID> getVisibleEntities(WorldInfo wi) {
 		ChangeSet sc = wi.getChanged();
