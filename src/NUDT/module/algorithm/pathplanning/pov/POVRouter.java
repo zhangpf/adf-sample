@@ -1,11 +1,14 @@
 package NUDT.module.algorithm.pathplanning.pov;
 
 import java.awt.Point;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.commons.math3.ode.nonstiff.ThreeEighthesIntegrator;
 
 import NUDT.module.algorithm.pathplanning.pov.graph.AreaNode;
 import NUDT.module.algorithm.pathplanning.pov.graph.EdgeNode;
@@ -19,10 +22,12 @@ import adf.agent.info.ScenarioInfo;
 import adf.agent.info.WorldInfo;
 import adf.agent.module.ModuleManager;
 import adf.component.module.algorithm.PathPlanning;
+import rescuecore2.misc.Pair;
 import rescuecore2.standard.entities.Area;
 import rescuecore2.standard.entities.Building;
 import rescuecore2.standard.entities.Human;
 import rescuecore2.standard.entities.StandardEntity;
+import rescuecore2.standard.entities.StandardEntityURN;
 import rescuecore2.worldmodel.EntityID;
 
 public class POVRouter extends PathPlanning {
@@ -313,6 +318,26 @@ public class POVRouter extends PathPlanning {
 	}
 
 	
+	private CostFunction getCostFunc()
+	{
+		CostFunction cf;
+		StandardEntityURN urn = this.agentInfo.me().getStandardURN();
+		switch (urn) {
+		case AMBULANCE_TEAM:
+			cf = this.normalFunc;
+			break;
+		case FIRE_BRIGADE:
+			cf = this.normalFunc;
+			break;
+		case POLICE_FORCE:
+			cf = this.pfFunc;
+			break;
+		default:
+			cf = this.normalFunc;
+			break;
+		}
+		return cf;
+	}
 	
 	
 	
@@ -338,7 +363,51 @@ public class POVRouter extends PathPlanning {
 
 	@Override
 	public PathPlanning calc() {
-		// TODO Auto-generated method stub
-		return null;
+		
+		this.result = null;
+		
+		StandardEntity from_entity = this.worldInfo.getEntity(this.from);
+		Pair<Integer, Integer> mypos = this.agentInfo.me().getLocation(this.worldInfo.getRawWorld());
+		
+		if(this.targets.size() < 1)
+		{ }
+		else if(this.targets.size() == 1)
+		{
+			StandardEntity target_entity = this.worldInfo.getEntity(this.targets.iterator().next());
+			
+			if(target_entity instanceof Area)
+			{
+				if(from_entity instanceof Area)
+				{
+					this.result = getAStar((Area)from_entity, (Area)target_entity, 
+						this.getCostFunc(), new Point(mypos.first().intValue(), mypos.second().intValue()));
+				}
+				else if(from_entity instanceof Human)
+				{
+					this.result = getAStar((Human)this.agentInfo.me(), (Area)target_entity, this.getCostFunc());
+				}
+			}
+		}
+		else 
+		{
+			List<StandardEntity> targetentities = new ArrayList<StandardEntity>();
+			for(EntityID entityID : this.targets)
+			{
+				StandardEntity tmp = this.worldInfo.getEntity(entityID);
+				if(tmp != null)
+					targetentities.add(tmp);
+			}
+			if(from_entity instanceof Area)
+			{
+				this.result = getMultiAStar((Area)from_entity, targetentities, 
+					this.getCostFunc(), new Point(mypos.first().intValue(), mypos.second().intValue()));
+			}
+			else if(from_entity instanceof Human)
+			{
+				
+			}
+			
+		}
+		return this;
 	}
 }
