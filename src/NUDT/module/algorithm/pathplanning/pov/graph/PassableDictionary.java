@@ -12,10 +12,10 @@ import java.util.List;
 import java.util.Set;
 
 import NUDT.utils.AgentConstants;
-import csu.model.object.CSURoad;
 import NUDT.module.algorithm.pathplanning.pov.POVPath;
 import NUDT.module.algorithm.pathplanning.pov.POVRouter;
 import NUDT.utils.SetPair;
+import NUDT.module.complex.utils.RoadTools;
 import NUDT.module.complex.utils.WorldTools;
 import adf.agent.info.AgentInfo;
 import adf.agent.info.ScenarioInfo;
@@ -27,7 +27,6 @@ import rescuecore2.standard.entities.Building;
 import rescuecore2.standard.entities.Human;
 import rescuecore2.standard.entities.Road;
 import rescuecore2.standard.entities.StandardEntity;
-import rescuecore2.standard.entities.StandardWorldModel;
 import rescuecore2.worldmodel.EntityID;
 
 public class PassableDictionary {
@@ -138,7 +137,7 @@ public class PassableDictionary {
 				for (EdgeNode edgeNode : areaNode.getNeighbours()) {
 					// if (getPassableLevel(areaNode, edgeNode) == PassableLevel.SURE_PASSABLE)
 					// 		continue;
-					PassableLevel level = isPassableLine(areaNode, edgeNode, null);
+					PassableLevel level =  isPassableLine(areaNode, edgeNode, null, wi);
 					if (level != PassableLevel.UNKNOWN) {
 						PassableLevel preValue = 
 								passableMap.put(new SetPair<PointNode, PointNode>(areaNode, edgeNode), level);
@@ -161,17 +160,14 @@ public class PassableDictionary {
 	 *            the passable edge of this road
 	 * @return the passable level of this road
 	 */
-	private PassableLevel isPassableLine(final AreaNode areaNode, final EdgeNode edgeNode, Point start) {
+	private PassableLevel isPassableLine(final AreaNode areaNode, final EdgeNode edgeNode, Point start, WorldInfo wi) {
 		Area area = areaNode.getBelong();
-		Road csuRoad = null;
 		if (area instanceof Road) {
 			Road road = (Road) area;
 			if (!road.isBlockadesDefined())
 				return PassableLevel.UNKNOWN;
 
-			csuRoad = (Road)wi.getEntity(area.getID());
-
-			if (!csuRoad.isPassable()) {
+			if (!RoadTools.isPassable(road, wi)) {
 				if (start == null)
 					return PassableLevel.UNPASSABLE;
 				
@@ -209,7 +205,7 @@ public class PassableDictionary {
 				}
 			} 
 			
-			if (csuRoad.isRoadCenterBlocked()) {
+			if (RoadTools.isRoadCenterBlocked(road, wi)) {
 				return PassableLevel.PARTLT_PASSABLE;
 			}
 		}
@@ -291,12 +287,12 @@ public class PassableDictionary {
 		return result;
 	}
 
-	public PassableLevel getPassableLevel(final PointNode a, final PointNode b, Point start) {
+	public PassableLevel getPassableLevel(final PointNode a, final PointNode b, Point start, WorldInfo wi) {
 		if (a instanceof RootNode) {
-			return isPassableLine((AreaNode) a, (EdgeNode) b, start);
+			return isPassableLine((AreaNode) a, (EdgeNode) b, start, wi);
 		}
 		if (b instanceof RootNode) {
-			return isPassableLine((AreaNode) b, (EdgeNode) a, start);
+			return isPassableLine((AreaNode) b, (EdgeNode) a, start, wi);
 		}
 		if ((a instanceof AreaNode && ((AreaNode) a).getBelong() instanceof Building)
 				|| (b instanceof AreaNode && ((AreaNode) b).getBelong() instanceof Building)) {

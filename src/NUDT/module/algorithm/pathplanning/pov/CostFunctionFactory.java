@@ -8,6 +8,7 @@ import NUDT.module.algorithm.pathplanning.pov.graph.EdgeNode;
 import NUDT.module.algorithm.pathplanning.pov.graph.PassableDictionary;
 import NUDT.module.algorithm.pathplanning.pov.graph.PointNode;
 import adf.agent.info.ScenarioInfo;
+import adf.agent.info.WorldInfo;
 import rescuecore2.standard.entities.Area;
 import rescuecore2.standard.entities.Building;
 import rescuecore2.standard.entities.Road;
@@ -19,7 +20,7 @@ class CostFunctionFactory {
 	  例如: 从一个着火的建筑出来的代价应该小于进入一个着火的建筑的代价
 	  */
 	
-	static CostFunction normal(final PassableDictionary passableDic) {
+	static CostFunction normal(final PassableDictionary passableDic, WorldInfo wi) {
 		return new CostFunction() {
 			@Override
 			public double cost(final PointNode from, final PointNode to, Point startPoint) {
@@ -47,7 +48,7 @@ class CostFunctionFactory {
 					}
 				}
 				if (area instanceof Road) {
-					switch (passableDic.getPassableLevel(areaNode, edgeNode, startPoint)) {
+					switch (passableDic.getPassableLevel(areaNode, edgeNode, startPoint, wi)) {
 					case SURE_PASSABLE:
 					case COMMUNICATION_PASSABLE:
 						return distance;
@@ -68,7 +69,7 @@ class CostFunctionFactory {
 		};
 	}
 	
-	static CostFunction strict(final PassableDictionary passableDic) {
+	static CostFunction strict(final PassableDictionary passableDic, WorldInfo wi) {
 		return new CostFunction() {
 			@Override
 			public double cost(final PointNode from, final PointNode to, Point startPoint) {
@@ -95,7 +96,7 @@ class CostFunctionFactory {
 					}
 				}
 				if (area instanceof Road) {
-					switch (passableDic.getPassableLevel(areaNode, edgeNode, startPoint)) {
+					switch (passableDic.getPassableLevel(areaNode, edgeNode, startPoint, wi)) {
 					case SURE_PASSABLE:
 					case COMMUNICATION_PASSABLE:
 						return distance;	
@@ -114,7 +115,7 @@ class CostFunctionFactory {
 		};
 	}
 	
-	static CostFunction search(final PassableDictionary passableDic) {
+	static CostFunction search(final PassableDictionary passableDic, WorldInfo wi) {
 		return new CostFunction() {
 			@Override
 			public double cost(final PointNode from, final PointNode to, Point startPoint) {
@@ -141,7 +142,7 @@ class CostFunctionFactory {
 					}
 				}
 				if (area instanceof Road) {
-					switch (passableDic.getPassableLevel(areaNode, edgeNode, startPoint)) {
+					switch (passableDic.getPassableLevel(areaNode, edgeNode, startPoint, wi)) {
 					case SURE_PASSABLE:
 						return distance * 1.5;
 					case PARTLT_PASSABLE:
@@ -162,7 +163,7 @@ class CostFunctionFactory {
 	}
 	
 	static CostFunction fb(final ScenarioInfo si, 
-			final PassableDictionary passableDic, final Building dest) {
+			final PassableDictionary passableDic, final Building dest, WorldInfo wi) {
 		return new CostFunction() {
 			@Override
 			public double cost(final PointNode from, final PointNode to, Point startPoint) {
@@ -192,7 +193,7 @@ class CostFunctionFactory {
 					return distance;
 				}
 				if (area instanceof Road) {
-					switch (passableDic.getPassableLevel(areaNode, edgeNode, startPoint)) {
+					switch (passableDic.getPassableLevel(areaNode, edgeNode, startPoint, wi)) {
 					case SURE_PASSABLE:
 					case COMMUNICATION_PASSABLE:
 						return distance;	
@@ -244,7 +245,7 @@ class CostFunctionFactory {
 		};
 	}
 	
-	static CostFunction at(final PassableDictionary passableDic, final Map<EntityID, Double> minStaticCost) {
+	static CostFunction at(final PassableDictionary passableDic, final Map<EntityID, Double> minStaticCost, WorldInfo wi) {
 		return new CostFunction() {
 			@Override
 			public double cost(final PointNode from, final PointNode to, Point startPoint) {
@@ -270,7 +271,7 @@ class CostFunctionFactory {
 					}
 				}
 				if (area instanceof Road) {
-					switch (passableDic.getPassableLevel(areaNode, edgeNode, startPoint)) {
+					switch (passableDic.getPassableLevel(areaNode, edgeNode, startPoint, wi)) {
 					case SURE_PASSABLE:
 					case COMMUNICATION_PASSABLE:
 						return distance;

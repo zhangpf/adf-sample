@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.sun.xml.internal.bind.WhiteSpaceProcessor;
-
 import NUDT.module.algorithm.pathplanning.pov.graph.AreaNode;
 import NUDT.module.algorithm.pathplanning.pov.graph.EdgeNode;
 import NUDT.module.algorithm.pathplanning.pov.graph.PassableDictionary;
@@ -20,7 +18,6 @@ import adf.agent.info.AgentInfo;
 import adf.agent.info.ScenarioInfo;
 import adf.agent.info.WorldInfo;
 import adf.agent.module.ModuleManager;
-import adf.component.module.AbstractModule;
 import adf.component.module.algorithm.PathPlanning;
 import rescuecore2.standard.entities.Area;
 import rescuecore2.standard.entities.Building;
@@ -71,9 +68,9 @@ public class POVRouter extends PathPlanning {
 		;
 		search = new POVSearch(routeThinkTime, pov);
 		
-		normalFunc = CostFunctionFactory.normal(passableDic);
-		strictFunc = CostFunctionFactory.strict(passableDic);
-		searchFunc = CostFunctionFactory.search(passableDic);
+		normalFunc = CostFunctionFactory.normal(passableDic, wi);
+		strictFunc = CostFunctionFactory.strict(passableDic, wi);
+		searchFunc = CostFunctionFactory.search(passableDic, wi);
 		
 		pfFunc = CostFunctionFactory.pf();
 	}
@@ -88,7 +85,7 @@ public class POVRouter extends PathPlanning {
 //			}
 //		}
 		if (uftReachable != null) {
-			uftReachable.update(this.agentInfo, this.scenarioInfo, this, newPassables);
+			uftReachable.update(this.agentInfo, this.scenarioInfo, this, newPassables, this.worldInfo);
 		}
 	}
 
@@ -173,11 +170,11 @@ public class POVRouter extends PathPlanning {
 	}
 	
 	public CostFunction getFbCostFunction(Building dest) {
-		return CostFunctionFactory.fb(this.scenarioInfo, passableDic, dest);
+		return CostFunctionFactory.fb(this.scenarioInfo, passableDic, dest, this.worldInfo);
 	}
 	
 	public CostFunction getAtCostFunction(final Map<EntityID, Double> minStaticCost) {
-		return CostFunctionFactory.at(passableDic, minStaticCost);
+		return CostFunctionFactory.at(passableDic, minStaticCost, this.worldInfo);
 	}
 
 	public PointOfVisivility getPOV() {
@@ -281,7 +278,7 @@ public class POVRouter extends PathPlanning {
 			return 0;
 		int count = 0;
 		for (EdgeNode p : areaNode.getNeighbours()) {
-			if (getPassableDic().getPassableLevel(areaNode, p, null) == level) {
+			if (getPassableDic().getPassableLevel(areaNode, p, null, this.worldInfo) == level) {
 				count++;
 			}
 		}

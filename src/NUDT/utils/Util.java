@@ -1,5 +1,6 @@
 package NUDT.utils;
 
+import java.awt.Point;
 import java.awt.Polygon;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -48,6 +49,50 @@ public class Util {
         return polygon;
     }
 	
+	public static List<Pair<Integer, Integer>> getVertices(int[] apexes) {
+		List<Pair<Integer, Integer>> vertexes = new ArrayList<>();
+		
+		int vertexCount = apexes.length / 2;
+		
+		for (int i = 0; i < vertexCount; i++) {
+			vertexes.add(new Pair<Integer, Integer>(apexes[2 * i], apexes[2 * i + 1]));
+		}
+		
+		return vertexes;
+	}
+	
+	public static boolean pointToSegWithinThreshold(Line2D line, Point point, double threshold) {
+
+		double pos = java.awt.geom.Line2D.ptSegDist(line.getOrigin().getX(),
+				line.getOrigin().getY(), line.getEndPoint().getX(), line
+						.getEndPoint().getY(), point.getX(), point.getY());
+		if (pos <= threshold)
+			return true;
+
+		return false;
+	}
+	
+	public static Point getMiddle(Pair<Integer, Integer> first, Point2D second) {
+		int x = first.first() + (int)second.getX();
+		int y = first.second() + (int)second.getY();
+		
+		return new Point(x / 2, y / 2);
+	}
+	
+	public static Point getMiddle(Point2D first, Point2D second) {
+		int x = (int)(first.getX() + second.getX());
+		int y = (int)(first.getY() + second.getY());
+		
+		return new Point(x / 2, y / 2);
+	}
+	
+	public static Point2D getMiddle(Line2D line) {
+		double x = line.getOrigin().getX() + line.getEndPoint().getX();
+		double y = line.getOrigin().getY() + line.getEndPoint().getY();
+		
+		return new Point2D(x / 2, y / 2);
+	}
+	
 	/** Convert EntityID list to integer list.*/
 	public static List<Integer> entityIdListToIntegerList(List<EntityID> entityIds) {
 		List<Integer> returnList = new ArrayList<Integer>();
@@ -64,6 +109,39 @@ public class Util {
 			returnList.add(new EntityID(next.intValue()));
 		}
 		return returnList;
+	}
+	
+	public static boolean hasIntersection(Polygon polygon, rescuecore2.misc.geometry.Line2D line) {
+		List<rescuecore2.misc.geometry.Line2D> polyLines = getLines(polygon);
+		for (rescuecore2.misc.geometry.Line2D ln : polyLines) {
+
+			math.geom2d.line.Line2D line_1 = new math.geom2d.line.Line2D(
+					line.getOrigin().getX(), line.getOrigin().getY(), 
+					line.getEndPoint().getX(), line.getEndPoint().getY());
+
+			math.geom2d.line.Line2D line_2 = new math.geom2d.line.Line2D(
+					ln.getOrigin().getX(), ln.getOrigin().getY(),
+					ln.getOrigin().getX(), ln.getOrigin().getY());
+
+			if (math.geom2d.line.Line2D.intersects(line_1, line_2)) {
+
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private static List<rescuecore2.misc.geometry.Line2D> getLines(Polygon polygon) {
+		List<rescuecore2.misc.geometry.Line2D> lines = new ArrayList<>();
+		int count = polygon.npoints;
+		for (int i = 0; i < count; i++) {
+			int j = (i + 1) % count;
+			rescuecore2.misc.geometry.Point2D p1 = new rescuecore2.misc.geometry.Point2D(polygon.xpoints[i], polygon.ypoints[i]);
+			rescuecore2.misc.geometry.Point2D p2 = new rescuecore2.misc.geometry.Point2D(polygon.xpoints[j], polygon.ypoints[j]);
+			rescuecore2.misc.geometry.Line2D line = new rescuecore2.misc.geometry.Line2D(p1, p2);
+			lines.add(line);
+		}
+		return lines;
 	}
 	
 	/** Determines whether target polygon has intersect with target line.*/

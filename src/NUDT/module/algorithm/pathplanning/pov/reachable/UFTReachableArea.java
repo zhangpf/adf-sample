@@ -37,19 +37,19 @@ public class UFTReachableArea {
 		sureReachableTree = new UnionFindTree<EntityID>(ids);
 	}
 	
-	public void update(final AgentInfo ai, final ScenarioInfo si, POVRouter router, final Set<EdgeNode> newPassables) {
+	public void update(final AgentInfo ai, final ScenarioInfo si, POVRouter router, final Set<EdgeNode> newPassables, WorldInfo wi) {
 		if (ai.getTime() > si.getKernelAgentsIgnoreuntil()) {
-			updateSureReachable(router, newPassables);
+			updateSureReachable(router, newPassables, wi);
 		}
 	}
 	
-	private void updateSureReachable(POVRouter router, Set<EdgeNode> newPassables) {
+	private void updateSureReachable(POVRouter router, Set<EdgeNode> newPassables, WorldInfo wi) {
 		//sureReachableTree.resetAll();
 		final PassableDictionary passableDic = router.getPassableDic();
 		for (EdgeNode edge : newPassables) {
 			AreaNode first = null;
 			for (AreaNode area : edge.getNeighbours()) {
-				if (passableDic.getPassableLevel(area, edge, null).isPassable()) {
+				if (passableDic.getPassableLevel(area, edge, null, wi).isPassable()) {
 					if (first == null) {
 						first = area;
 					} else {
