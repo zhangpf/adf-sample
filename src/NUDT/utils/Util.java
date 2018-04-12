@@ -93,23 +93,7 @@ public class Util {
 		return new Point2D(x / 2, y / 2);
 	}
 	
-	/** Convert EntityID list to integer list.*/
-	public static List<Integer> entityIdListToIntegerList(List<EntityID> entityIds) {
-		List<Integer> returnList = new ArrayList<Integer>();
-		for (EntityID entityId: entityIds) {
-			returnList.add(entityId.getValue());
-		}
-		return returnList;
-	}
 	
-	/** Convert integer list to EntityID list.*/
-	public static List<EntityID> integerListToEntityIdList(List<Integer> integerIds) {
-		List<EntityID> returnList = new ArrayList<EntityID>();
-		for (Integer next : integerIds) {
-			returnList.add(new EntityID(next.intValue()));
-		}
-		return returnList;
-	}
 	
 	public static boolean hasIntersection(Polygon polygon, rescuecore2.misc.geometry.Line2D line) {
 		List<rescuecore2.misc.geometry.Line2D> polyLines = getLines(polygon);
@@ -224,71 +208,8 @@ public class Util {
         objectOutputStream.writeObject(object);
         objectOutputStream.close();
     }
-    
-    /*
-    public static Set<EntityID> entityToIds(BurningBuildings entities) {
-    	Set<EntityID> entityIds = new FastSet<>();
-    	for (StandardEntity next :entities) {
-    		entityIds.add(next.getID());
-    	}
-    	return entityIds;
-    }
-    
-    public static Set<EntityID> csuBuildingToId(Set<CSUBuilding> csuBuildings) {
-    	Set<EntityID> entityIds = new FastSet<>();
-    	for (CSUBuilding next : csuBuildings) {
-    		entityIds.add(next.getId());
-    	}
-    	return entityIds;
-    }
-    */
-    
-    public static Set<EntityID> entityToIds(Collection<StandardEntity> entities) {
-    	Set<EntityID> entityIds = new FastSet<>();
-    	for (StandardEntity next :entities) {
-    		entityIds.add(next.getID());
-    	}
-    	return entityIds;
-    }
-    
-    public static Set<StandardEntity> idToEntities(Collection<EntityID> ids, StandardWorldModel world) {
-    	Set<StandardEntity> entities = new FastSet<>();
-    	for (EntityID next : ids)  {
-    		entities.add(world.getEntity(next));
-    	}
-    	return entities;
-    }
-    
-    /*删除
-    public static List<CSUBuilding> integerToCsuBuilding(AdvancedWorldModel world, Collection<Integer> integers) {
-    	List<CSUBuilding> buildings = new ArrayList<>();
-    	for (Integer next : integers) {
-    		EntityID id = new EntityID(next.intValue());
-    		id = world.getEntity(id).getID();
-    		buildings.add(world.getCsuBuilding(id));
-    	}
-    	return buildings;
-    }
-    */
-    
-    /*用到，，需要修改调用该方法的地方
-    public static List<CSUBuilding> burnBuildingToCsuBuilding(AdvancedWorldModel world) {
-    	List<CSUBuilding> buildings = new ArrayList<>();
-    	if(AgentConstants.FB) {
-    		if(world.getBurningBuildings().isEmpty())
-    			System.out.println(world.getTime() + ", " + world.me + ", burning buildings is empty");
-    		else
-    			System.out.println(world.getTime() + ", " + world.me 
-    					+ ",world.getBurningBuildings()" + world.getBurningBuildings());
-    	} 
-    	
-    	for (Building building : world.getBurningBuildings()) {
-    		buildings.add(world.getCsuBuilding(building.getID()));
-    	}
-    	return buildings;
-    }
-    */
-    
+
+
     /**
      * @param line
      * @param size

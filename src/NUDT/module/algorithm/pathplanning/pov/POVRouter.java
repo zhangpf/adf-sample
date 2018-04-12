@@ -8,14 +8,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.math3.ode.nonstiff.ThreeEighthesIntegrator;
-
 import NUDT.module.algorithm.pathplanning.pov.graph.AreaNode;
 import NUDT.module.algorithm.pathplanning.pov.graph.EdgeNode;
 import NUDT.module.algorithm.pathplanning.pov.graph.PassableDictionary;
 import NUDT.module.algorithm.pathplanning.pov.graph.PointOfVisivility;
 import NUDT.module.algorithm.pathplanning.pov.graph.PassableDictionary.PassableLevel;
 import NUDT.module.algorithm.pathplanning.pov.reachable.UFTReachableArea;
+import NUDT.utils.EntityTools;
 import adf.agent.develop.DevelopData;
 import adf.agent.info.AgentInfo;
 import adf.agent.info.ScenarioInfo;
@@ -31,8 +30,6 @@ import rescuecore2.standard.entities.StandardEntityURN;
 import rescuecore2.worldmodel.EntityID;
 
 public class POVRouter extends PathPlanning {
-	
-	private Map<EntityID, Set<EntityID>> graph;
 
     private EntityID from;
     private Collection<EntityID> targets;
@@ -327,6 +324,16 @@ public class POVRouter extends PathPlanning {
 			cf = this.normalFunc;
 			break;
 		case FIRE_BRIGADE:
+			if(this.targets.size() > 1)
+				cf = this.normalFunc;
+			else if (this.targets.size() == 1){
+				Building building = EntityTools.getBuilding(this.targets.iterator().next(), this.worldInfo);
+				if(building != null)
+				{
+					cf = getFbCostFunction(building);
+					break;
+				}
+			}
 			cf = this.normalFunc;
 			break;
 		case POLICE_FORCE:
@@ -367,8 +374,7 @@ public class POVRouter extends PathPlanning {
 		this.result = null;
 		
 		StandardEntity from_entity = this.worldInfo.getEntity(this.from);
-		Pair<Integer, Integer> mypos = this.agentInfo.me().getLocation(this.worldInfo.getRawWorld());
-		
+		Pair<Integer, Integer> mypos = this.worldInfo.getLocation(this.agentInfo.me());;
 		if(this.targets.size() < 1)
 		{ }
 		else if(this.targets.size() == 1)

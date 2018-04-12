@@ -16,10 +16,10 @@ import NUDT.utils.Ruler;
 import NUDT.utils.Util;
 import NUDT.utils.geom.ExpandApexes;
 import NUDT.utils.MathTools;
+import NUDT.utils.EntityTools;
 
 import adf.agent.info.WorldInfo;
 import rescuecore2.standard.entities.Road;
-import rescuecore2.standard.entities.StandardEntity;
 import rescuecore2.worldmodel.EntityID;
 import rescuecore2.misc.geometry.GeometryTools2D;
 import rescuecore2.misc.geometry.Line2D;
@@ -30,20 +30,14 @@ import rescuecore2.standard.entities.Edge;
 
 public class RoadTools {
 	
-	private static Blockade getBlockade(EntityID entityID, WorldInfo wi)
-	{
-		StandardEntity entity = wi.getEntity(entityID);
-		if(entity instanceof Blockade)
-			return (Blockade)entity;
-		return null;
-	}
+	
 	
 	private static List<Blockade> getBlockades(Road road, WorldInfo wi)
 	{
 		List<Blockade> blockades = new LinkedList<Blockade>();
 		for(EntityID blockadeID : road.getBlockades())
 		{
-			Blockade blk = getBlockade(blockadeID, wi);
+			Blockade blk = EntityTools.getBlockade(blockadeID, wi);
 			if(blk != null)
 				blockades.add(blk);
 		}
@@ -54,12 +48,6 @@ public class RoadTools {
 	{
 		if (isAllEdgePassable(road) || isOneEdgeUnpassable(road)) {
 			
-			/*for (CSUBlockade next : getCsuBlockades()) {
-				if (next.getPolygon().contains(selfRoad.getX(), selfRoad.getY()))
-					return false;
-			}*/
-			// return true;
-			// TODO July 9, 2014  Time: 2:58pm
 			return getPassableEdge(road, wi).size() > 1;      ///why > 
 		} else {
 			
@@ -80,7 +68,7 @@ public class RoadTools {
 		List<EscapePoint> m_p_points = new ArrayList<>();
 		
 		for (EntityID nextID : road.getBlockades()) {
-			Blockade next = getBlockade(nextID, wi);
+			Blockade next = EntityTools.getBlockade(nextID, wi);
 			if (next == null)
 				continue;
 			Polygon expan = Util.getPolygon(next.getApexes());
@@ -158,7 +146,7 @@ public class RoadTools {
 			}
 			
 			for (EntityID blockadeID : road.getBlockades()) {
-				Blockade blockade = getBlockade(blockadeID, wi);
+				Blockade blockade = EntityTools.getBlockade(blockadeID, wi);
 				if (blockade == null)
 					continue;
 				Polygon polygon = Util.getPolygon(blockade.getApexes());
@@ -253,7 +241,7 @@ public class RoadTools {
 	public static boolean isRoadCenterBlocked(Road road, WorldInfo wi)
 	{
 		for (EntityID blockadeID : road.getBlockades()) {
-			Blockade next = getBlockade(blockadeID, wi);
+			Blockade next = EntityTools.getBlockade(blockadeID, wi);
 			if(next == null)
 				continue;
 			if (Util.getPolygon(next.getApexes()).contains(road.getX(), road.getY()))
@@ -284,7 +272,7 @@ public class RoadTools {
 		 * 最后再判断blockPart是否挡住了整个edge
 		 */
 		for (EntityID nextID : road.getBlockades()) {
-			Blockade next = getBlockade(nextID, wi);
+			Blockade next = EntityTools.getBlockade(nextID, wi);
 			if(next == null)
 				continue;
 			
