@@ -1,5 +1,5 @@
+package NUDT.utils;
 
-package csu.model;
 import java.util.EnumSet;
 
 import rescuecore2.standard.entities.StandardEntityURN;

@@ -1,19 +1,16 @@
-package csu.standard.simplePartition;
+package NUDT.utils;
 
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 
-import csu.agent.Agent;
-import csu.model.AdvancedWorldModel;
-import csu.standard.Ruler;
-
 import rescuecore2.misc.Pair;
 import rescuecore2.standard.entities.Area;
 import rescuecore2.standard.entities.Edge;
 import rescuecore2.standard.entities.Human;
 import rescuecore2.standard.entities.StandardEntity;
+import rescuecore2.standard.entities.StandardWorldModel;
 import rescuecore2.worldmodel.EntityID;
 
 /**
@@ -99,7 +96,7 @@ public class Locator {
      * @param model
      * @return
      */
-    public static Point getPosition(StandardEntity entity, AdvancedWorldModel model) {
+    public static Point getPosition(StandardEntity entity, StandardWorldModel model) {
         Point p;
         Pair<Integer, Integer> pair;
 
@@ -118,7 +115,7 @@ public class Locator {
      * @param model
      * @return
      */
-    public static Point getPosition(EntityID id, AdvancedWorldModel model) {
+    public static Point getPosition(EntityID id, StandardWorldModel model) {
         Point p;
         StandardEntity entity;
         
@@ -134,7 +131,7 @@ public class Locator {
      * @param model
      * @return
      */
-    public static Rectangle getBounds(Human human, AdvancedWorldModel model) {
+    public static Rectangle getBounds(Human human, StandardWorldModel model) {
         Point p;
         double s;
         Rectangle2D rect;

@@ -1,6 +1,5 @@
 package NUDT.module.complex.utils.FireBrigadeTools;
 
-import csu.model.object.CSUBuilding;
 import rescuecore2.standard.entities.Building;
 
 public class WaterCoolingEstimator {
@@ -56,10 +55,11 @@ public class WaterCoolingEstimator {
 		} else
 			throw new RuntimeException("WTF water=" + water);
 	}
-
+/*
 	public static int waterNeededToExtinguish(CSUBuilding building) {
 		return getWaterNeeded(building.getSelfBuilding().getGroundArea(),
 				building.getSelfBuilding().getFloors(), building.getSelfBuilding().getBuildingCode(),
 				building.getEstimatedTemperature(), 20); ///temperature
 	}
+	*/
 }
