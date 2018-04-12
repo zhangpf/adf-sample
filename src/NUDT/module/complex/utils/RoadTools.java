@@ -274,7 +274,6 @@ public class RoadTools {
 	public static boolean isBlocked(Edge edge, Road road, WorldInfo wi) {
 		Polygon expand = null;
 		boolean isStartBlocked = false, isEndBlocked = false;
-		boolean isBlocked = false;
 		Point2D openPartStart = null, openPartEnd = null;
 		
 		List<Line2D> blockedPart = new ArrayList<Line2D>();
@@ -383,23 +382,35 @@ public class RoadTools {
 	
 	/**
 	 * segs是edge上互不相交的若干线段，判断edge是否为可通过的
+	 * segs要根据起点排好序
 	 * @param edge 要判断能否通过的边
 	 * @param segs edge上的若干线段
 	 * @return
 	 */
-	private static boolean canPass(Edge edge, List<Line2D> segs)
-	
+	public static boolean canPass(Edge edge, List<Line2D> segs)
 	{
-		segs.add(new Line2D(edge.getStart(), edge.getStart()));
-		segs.add(new Line2D(edge.getEnd(), edge.getEnd()));
-		sortSegmentsByLeftPoint(segs);
+		//segs.add(new Line2D(edge.getStart(), edge.getStart()));
+		//segs.add(new Line2D(edge.getEnd(), edge.getEnd()));
+		//sortSegmentsByLeftPoint(segs);
+		segs.add(0, new Line2D(edge.getStart(), edge.getStart()));
+		segs.add(segs.size(), new Line2D(edge.getEnd(), edge.getEnd()));
+		//PrintSegs(segs);
 		int len = segs.size();
 		for(int i=0; i<len-1; i++)
 		{
-			if(Ruler.getDistance(segs.get(i), segs.get(i+1)) > 200)
+			if(Ruler.getDistance(segs.get(i), segs.get(i+1)) >= 200.0)
 				return true;
 		}
 		return false;
+	}
+	
+	public static void PrintSegs(List<Line2D> segs)
+	{
+		for(Line2D seg : segs)
+		{
+			System.out.printf("(%f, %f) -> (%f, %f)\n", seg.getOrigin().getX(), seg.getOrigin().getY(), seg.getEndPoint().getX(), seg.getEndPoint().getY());
+		}
+		
 	}
 	
 	/**
@@ -442,7 +453,7 @@ public class RoadTools {
 	 * @param lines 平行的线段集合
 	 * @return
 	 */
-	private static List<Line2D> mergeSegments(List<Line2D> lines)
+	public static List<Line2D> mergeSegments(List<Line2D> lines)
 	{
 		//根据线段的起点排序
 		sortSegmentsByLeftPoint(lines);
@@ -463,6 +474,7 @@ public class RoadTools {
 			res.add(leftMost);
 			lines.removeAll(linesToRemove);
 		}
+		//PrintSegs(res);
 		return res;
 	}
 	
