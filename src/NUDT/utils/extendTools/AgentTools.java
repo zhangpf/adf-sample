@@ -8,7 +8,7 @@ import NUDT.utils.Util;
 
 import adf.agent.info.AgentInfo;
 import adf.agent.info.WorldInfo;
-
+import rescuecore2.standard.entities.Area;
 import rescuecore2.standard.entities.Blockade;
 import rescuecore2.standard.entities.Human;
 import rescuecore2.standard.entities.StandardEntity;
@@ -52,6 +52,22 @@ public class AgentTools {
 			return wi.getPosition(ai.me().getID());
 		}
 		return me;
+	}
+	
+	/**
+	 * Return this area this agent located in or null when this agent is load by an AT.
+	 * @param ai
+	 * @param wi
+	 * @return
+	 */
+	public static Area selfAreaPosition(AgentInfo ai, WorldInfo wi)
+	{
+		StandardEntity location = selfPosition(ai, wi);
+		
+		if (location instanceof Area)
+			return (Area) location;
+		
+		return null;
 	}
 	
 	/**

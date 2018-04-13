@@ -36,6 +36,26 @@ public class PosAndLocHistory extends AbstractModule {
 		return this;
 	}
 	
+	public EntityID getHistoryPosition(int time)
+	{
+		return this.positionHistory.get(time);
+	}
+	
+	public Pair<Integer, Integer> getHistoryLocation(int time)
+	{
+		return this.locationHistory.get(time);
+	}
+	
+	public void setHistoryPosition(int time, EntityID entityID)
+	{
+		this.positionHistory.put(time, entityID);
+	}
+	
+	public void setHistoryLocation(int time, Pair<Integer, Integer> loc)
+	{
+		this.locationHistory.put(time, loc);
+	}
+	
 	@Override
 	public AbstractModule calc() {
 		return this;

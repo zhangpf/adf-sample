@@ -3,6 +3,8 @@ package NUDT.utils.extendTools.PoliceForceTools;
 import java.awt.Shape;
 import java.util.Set;
 
+import org.junit.experimental.theories.Theories;
+
 import adf.agent.info.AgentInfo;
 import adf.agent.info.WorldInfo;
 
@@ -12,8 +14,12 @@ import rescuecore2.standard.entities.Human;
 import rescuecore2.standard.entities.Road;
 import rescuecore2.standard.entities.StandardEntity;
 import rescuecore2.worldmodel.EntityID;
+
 import NUDT.module.StaticInfoContainer.Entrance;
 import NUDT.utils.Ruler;
+import NUDT.utils.extendTools.AgentTools;
+import NUDT.utils.extendTools.EntityTools;
+import NUDT.utils.extendTools.RoadTools;
 
 public class PoliceForceTools {
 	/**
@@ -23,7 +29,7 @@ public class PoliceForceTools {
 	 *    2.在某个building内，且该building的所有"entrance"被堵住
 	 * @return
 	 */
-	public static boolean judgeStuck(Human human, AgentInfo ai, WorldInfo wi, Entrance entrance)
+	public static boolean judgeStuck(Human human, WorldInfo wi, Entrance entrance)
 	{
 		Blockade blockade = isLocateInBlockade(human, wi);
 		if (blockade == null)
@@ -33,12 +39,11 @@ public class PoliceForceTools {
 		//如果minDistance很小，说明agent在一个blockade的边界上，此种情况不能算被困住
 		//所以只有当minDistance大于一定值，才认为其被困住
 		if (minDistance > 500){
-			System.out.println(ai.getTime() + ", " + ai.me() + ", " + "is stucked");
 			return true;
 		}
 		
-		if (AgentTools.selfPosition(ai, wi) instanceof Building) {
-			Building loc = (Building) AgentTools.selfPosition(ai, wi);
+		if (wi.getPosition(human) instanceof Building) {
+			Building loc = (Building) wi.getPosition(human);
 			
 			Set<Road> entrances = entrance.getEntrance(loc);
 			int size = entrances.size();

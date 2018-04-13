@@ -6,13 +6,21 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
+import org.apache.commons.math3.ode.nonstiff.ThreeEighthesIntegrator;
+import org.jaxen.util.SelfAxisIterator;
+
 import NUDT.module.DynamicInfoContainer.CriticalArea;
+import NUDT.module.DynamicInfoContainer.PoliceForceHelpInfos;
+import NUDT.module.DynamicInfoContainer.PosAndLocHistory;
 import NUDT.module.DynamicInfoContainer.StuckedAgents;
 import NUDT.module.StaticInfoContainer.StaticInfoContainerModule;
 import NUDT.module.algorithm.pathplanning.pov.POVRouter;
 import NUDT.utils.extendTools.EntityTools;
+import NUDT.utils.extendTools.RoadTools;
+import NUDT.utils.extendTools.WorldTools;
 import NUDT.utils.extendTools.AgentTools;
 import NUDT.utils.Ruler;
 import NUDT.utils.Util;
@@ -21,9 +29,11 @@ import rescuecore2.standard.entities.AmbulanceTeam;
 import rescuecore2.standard.entities.Area;
 import rescuecore2.standard.entities.Blockade;
 import rescuecore2.standard.entities.Building;
+import rescuecore2.standard.entities.Civilian;
 import rescuecore2.standard.entities.Edge;
 import rescuecore2.standard.entities.FireBrigade;
 import rescuecore2.standard.entities.Human;
+import rescuecore2.standard.entities.Refuge;
 import rescuecore2.standard.entities.Road;
 import rescuecore2.standard.entities.StandardEntity;
 import rescuecore2.standard.entities.StandardEntityURN;
@@ -42,13 +52,13 @@ import adf.agent.info.ScenarioInfo;
 import adf.agent.info.WorldInfo;
 import adf.agent.module.ModuleManager;
 import adf.component.extaction.ExtAction;
+import csu.agent.Agent.ActionCommandException;
+import csu.model.AgentConstants;
 import NUDT.module.algorithm.pathplanning.pov.CostFunction;
 import NUDT.utils.extendTools.PoliceForceTools.PFLastTaskType;
+import NUDT.utils.extendTools.PoliceForceTools.PFLastTaskType.PFClusterLastTaskEnum;
+import NUDT.utils.extendTools.PoliceForceTools.PoliceForceTools;
 
-import csu.agent.Agent.ActionCommandException;
-import csu.agent.pf.PFLastTaskType.PFClusterLastTaskEnum;
-import csu.model.AgentConstants;
-import csu.model.route.pov.CostFunction;
 
 /**
  * from POSBased，
@@ -70,21 +80,27 @@ public class ActionExtClear extends ExtAction
 	
 	//Dynamic Infos
 	protected CriticalArea criticalArea;
-	protected StuckedAgents stuckedAgents;
+	protected PoliceForceHelpInfos policeForceHelpInfos;
+	protected PosAndLocHistory posAndLocHistory;
 	protected POVRouter router;
+	
+	protected Random random;
 	//Static Infos
 	protected StaticInfoContainerModule staticInfoContainerModule;
 	
 	public ActionExtClear(AgentInfo ai, WorldInfo wi, ScenarioInfo si, ModuleManager moduleManager,
-			DevelopData developData, CriticalArea ca, StuckedAgents sa, StaticInfoContainerModule sicm,
-			POVRouter router) {
+			DevelopData developData, CriticalArea ca, PoliceForceHelpInfos pfhis, StaticInfoContainerModule sicm,
+			PosAndLocHistory polh, POVRouter router) {
 		super(ai, wi, si, moduleManager, developData);
 		this.criticalArea = ca;
-		this.stuckedAgents = sa;
+		this.policeForceHelpInfos = pfhis;
 		this.staticInfoContainerModule = sicm;
+		this.posAndLocHistory = polh;
 		this.router = router;
 		
 		this.time = this.agentInfo.getTime();
+		
+		this.random = new Random();
 		
 		Pair<Integer, Integer> selfLocPair = this.worldInfo.getLocation(this.agentInfo.me().getID());
 		this.x = selfLocPair.first();
@@ -111,8 +127,50 @@ public class ActionExtClear extends ExtAction
 	@Override
 	public ExtAction calc() {
 		
+		this.cannotClear();
+		this.careSelf();
+
+		// 自己被困
+		// 连续发送move，但是位置变化小。包括了困在building中
+		if (isBlocked()) {
+
+			Blockade target = this.blockedClear();
+			if (target != null) {
+				//pf没有用到lastMovePlan，此属性为空
+				//this.updateClearPath(lastMovePlan);
+				this.updateClearPath(new ArrayList<EntityID>());
+				this.result = new ActionClear(target.getX(), target.getY());
+				return this;
+			}
+
+			randomWalk();
+		}
+
+		// 自己locate in blockade
+		// 应该提前
+		this.stuckedClear();
+
+		// 优先考虑周围情况
+		this.coincidentWork();
+
+		this.updateClearPath(lastCyclePath);
+		this.clear();
+		// 继续上次任务
+		this.continueLastTask();
+		this.traversalRefuge();
+
+		this.helpBuriedAgent();
+		this.helpStuckAgent();
+		// 更替
+		// this.searchingBurningBuilding();
+		this.searchingBurningBuildingCritical();
+		// this.traversalCritical();
+		this.helpBuriedHumans();
+		this.traversalEntrance();
+		this.expandCluster();
+		this.randomWalk();
 		
-		mixingClear();
+
 		
 		return this;
 	}
@@ -134,44 +192,439 @@ public class ActionExtClear extends ExtAction
 	private void cannotClear(){
 		Human me = (Human)this.agentInfo.me();
 		if (!me.isHPDefined() || me.getHP() <= 1000) {
-
-			clusterLastTaskType = PFClusterLastTaskEnum.CANNOT_TO_CLEAR;
+			this.policeForceHelpInfos.setClusterLastTaskType(PFClusterLastTaskEnum.CANNOT_TO_CLEAR);
 			Collection<StandardEntity> allReguge = this.worldInfo.getEntitiesOfType(StandardEntityURN.REFUGE);
 
-			NUDT.module.algorithm.pathplanning.pov.CostFunction costFunc = router.getNormalCostFunction();
+			CostFunction costFunc = router.getNormalCostFunction();
 			Point selfL = new Point(me.getX(), me.getY());
-			lastCyclePath = router.getMultiAStar(location(), allReguge,
-					costFunc, selfL);
+			
+			StandardEntity myPos = AgentTools.selfPosition(this.agentInfo, this.worldInfo);
+			//如果该agent在ambulanceTeam上，则返回null
+			Area myPosArea = myPos instanceof Area ? (Area)myPos : null;
+			lastCyclePath = router.getMultiAStar(myPosArea, 
+					allReguge, costFunc, selfL);
 
-			if (AgentConstants.PRINT_TEST_DATA_PF) {
-
-				String str = null;
-				for (EntityID next : lastCyclePath) {
-					if (str == null) {
-						str = next.getValue() + "";
-					} else {
-						str = str + "," + next.getValue();
-					}
-				}
-			}
 
 			move(lastCyclePath);
 		}
 	}
 	
 	
-	public void move(List<EntityID> path) throws ActionCommandException {
+	
+	
+	/**
+	 * When the HP point of mine is less than a certain point, I need to go to refuge and rest.
+	 * 
+	 * @throws ActionCommandException
+	 */
+	protected void careSelf() {
+		Human me = EntityTools.getHuman(this.agentInfo.me().getID(), this.worldInfo);
+		if (me.getHP() - me.getDamage() * (this.scenarioInfo.getKernelTimesteps() - time) < 16) {
+			moveToRefuge();
+		}
+	}
+	
+	/** Move to refuge.*/
+	protected void moveToRefuge() {
+		Collection<StandardEntity> refuges = this.worldInfo.getEntitiesOfType(StandardEntityURN.REFUGE);
+		
+		if (refuges.isEmpty())
+			return;
+		
+		move(refuges);
+	}
+	
+	public void move(Collection<? extends StandardEntity> destinations) {
+		move(destinations, router.getNormalCostFunction());
+	}
+	
+	/**
+	 * Find the best target location from a collection of destinations and move
+	 * to this best target location with the given CostFunction.
+	 * 
+	 * @param destinations
+	 *            a collection of destinations
+	 * @param costFunc
+	 *            the given CostFunction
+	 * @throws ActionCommandException
+	 */
+	public void move(Collection<? extends StandardEntity> destinations,
+			CostFunction costFunc){
+		
+		Pair<Integer, Integer> myLoc = this.worldInfo.getLocation(this.agentInfo.me());
+		
+		move(router.getMultiDest(
+				EntityTools.getArea(AgentTools.selfPosition(this.agentInfo, this.worldInfo).getID(), this.worldInfo),
+				destinations, costFunc, 
+				new Point(myLoc.first(), myLoc.second())));
+	}
+	
+	public void move(List<EntityID> path) {
 		if (path.size() > 2) {
 			EntityID id_1 = path.get(0);
 			EntityID id_2 = path.get(1);
 			if (id_1.getValue() == id_2.getValue())
 				path.remove(0);
 		}
-		this.clearStrategy.updateClearPath(path);
-		this.clearStrategy.clear();
-		sendMove(time, path);
+		this.updateClearPath(path);
+		this.clear();
+		this.result = new ActionMove(path);
 		this.lastCyclePath = null;
-		throw new ActionCommandException(StandardMessageURN.AK_MOVE);
+		return ;
+	}
+	
+	public void move(List<EntityID> path, int destX, int destY) {
+		if (path.size() > 2) {
+			EntityID id_1 = path.get(0);
+			EntityID id_2 = path.get(1);
+			if (id_1.getValue() == id_2.getValue())
+				path.remove(0);
+		}
+
+		this.updateClearPath(path);
+		this.clear();
+		this.result = new ActionMove(path, destX, destY);
+		this.lastCyclePath = null;
+		return ;
+	}
+	
+	/** 
+	 * 判断一个platoon agent是否被路障挡住。这种情况下，agent不能按照原来的路径继续前进，但可以后退。
+	 * using two judging methods: the located roads need to cleared; the position varies little.
+	 * @return 当一个platoon agent被路障挡住时返回true。否则，false。
+	 */
+	public boolean isBlocked() {
+		//？？
+		if (time < this.scenarioInfo.getKernelAgentsIgnoreuntil() + 2)
+			return false;
+		
+		
+		if (this.agentInfo.getExecutedAction(time-1).getCommand(this.agentInfo.me().getID(), time-1).getURN().equals(StandardMessageURN.AK_MOVE) &&
+				this.agentInfo.getExecutedAction(time-2).getCommand(this.agentInfo.me().getID(), time-2).getURN().equals(StandardMessageURN.AK_MOVE)) {
+			
+			//201409
+			EntityID position_id = this.posAndLocHistory.getHistoryPosition(time);
+			StandardEntity position_entity = this.worldInfo.getEntity(position_id);
+			if (position_entity instanceof Building) {
+				
+				Building position_building = (Building) position_entity;
+				Set<Road> entranceList = this.staticInfoContainerModule.getEntrance().getEntrance(position_building);
+				for (Road entrance : entranceList) {
+					if (RoadTools.isNeedlessToClear(entrance, this.worldInfo)) {
+						return false;
+					}
+				}
+				return true;
+				
+			}
+			
+			Pair<Integer, Integer> location_1 = this.posAndLocHistory.getHistoryLocation(time - 2);
+			Pair<Integer, Integer> location_2 = this.posAndLocHistory.getHistoryLocation(time - 1);
+			Pair<Integer, Integer> location_3 = this.posAndLocHistory.getHistoryLocation(time);
+			
+			if (location_1 == null || location_2 == null || location_3 == null)
+				return false;
+			
+			double distance_1 = Ruler.getDistance(location_1, location_2);
+			double distance_2 = Ruler.getDistance(location_2, location_3);
+			
+			if (distance_1 < 8000 && distance_2 < 8000) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	protected void randomWalk() { ///
+
+			Collection<StandardEntity> inRnage = this.worldInfo.getObjectsInRange(this.agentInfo.me(), 50000);
+			List<Area> target = new ArrayList<>();
+			Collection<Area> blockadeDefinedArea = new ArrayList<>();
+			
+			for (StandardEntity entity : inRnage) {
+				if (!(entity instanceof Area))
+					continue;
+				if (entity.getID().getValue() == 
+						AgentTools.selfAreaPosition(this.agentInfo, this.worldInfo).getID().getValue())
+					continue;
+				Area nearArea = (Area) entity;
+				///now the blockadeDefinedArea is empty, exclude the blocked at first
+				if (nearArea.isBlockadesDefined() && nearArea.getBlockades().size() > 0) {
+					blockadeDefinedArea.add(nearArea);
+					continue;
+				}
+				///would not go to the fire building
+				if(entity instanceof Building && ((Building) entity).isOnFire()) 
+					continue;
+				
+				target.add(nearArea);
+			}
+			
+			if (target.isEmpty())
+				target.addAll(blockadeDefinedArea);
+			
+			///randomCount = (randomCount < target.size()) ? randomCount++ : 0;///walk not randomly
+			///Area randomTarget = target.get(randomCount);
+			Area randomTarget = target.get(random.nextInt(target.size()));
+			
+			Pair<Integer, Integer> myLoc = this.worldInfo.getLocation(this.agentInfo.me());
+			///System.out.println(time + ", " + me() + ", " + target + ",,,,,,,," + randomTarget);
+			List<EntityID> path = router.getAStar(AgentTools.selfAreaPosition(this.agentInfo, this.worldInfo), 
+					randomTarget, router.getNormalCostFunction(), 
+					new Point(myLoc.first(), myLoc.second()));
+				
+			move(path);
+		}
+	
+	private void stuckedClear() {
+		Human me = EntityTools.getHuman(this.agentInfo.me().getID(), this.worldInfo);
+		if(me == null) return ;
+		if (PoliceForceTools.judgeStuck(me, this.worldInfo, this.staticInfoContainerModule.getEntrance())) {
+			Blockade blockade = PoliceForceTools.isLocateInBlockade(me, this.worldInfo);
+			if (blockade != null) {
+				
+				this.result = new ActionClear(blockade);
+				return ;
+			}
+		}
+	}
+	
+	/**
+	 * @throws ActionCommandException
+	 *             优先考虑周围偶然情况
+	 */
+	private void coincidentWork() {
+
+		coincidentTaskUpdate();
+		//201410
+		clearEntranceForCivilian();
+		//
+		coincidentCheckRefuge();
+		coincidentHelpStuckedAgent();
+		coincidentHelpBuriedAgent();
+		
+		
+	}
+	
+	
+	/**
+	 * 偶然任务更新 refuge and coincidentBuriedAgent agent in building
+	 */
+	private void coincidentTaskUpdate() {
+		StandardEntity me = this.agentInfo.me();
+		// 周围
+		for (StandardEntity next : this.worldInfo.getObjectsInRange(me.getID(), 50000)) {
+			if (next instanceof Refuge) {
+				if (this.policeForceHelpInfos.getVisitedRefuges().contains(next.getID())) {
+					this.policeForceHelpInfos.getCoincidentRefuges().remove((Refuge) next);
+					continue;
+				}
+				this.policeForceHelpInfos.getCoincidentRefuges().add((Refuge) next);
+
+				// buried agent in building
+			} else if (next instanceof Human && !(next instanceof Civilian)) {
+				if (this.policeForceHelpInfos.getVisitedBuriedAgent().contains(next.getID())) {
+					this.policeForceHelpInfos.getCoincidentBuriedAgent().remove((Human) next);
+					continue;
+				}
+
+				Human human = (Human) next;
+				if (human.isBuriednessDefined() && human.getBuriedness() > 0
+						&& human.isPositionDefined()) {
+					StandardEntity loca = this.worldInfo.getPosition(human);
+					if (loca instanceof Building) {
+						this.policeForceHelpInfos.getCoincidentBuriedAgent().add(human);
+					}
+				}
+			}
+		}
+	}
+	
+	private void clearEntranceForCivilian() {
+		List<EntityID> buildingList = new ArrayList<>();
+		List<EntityID> humanList = new ArrayList<>();
+		for (EntityID next : this.worldInfo.getChanged().getChangedEntities()) {
+			StandardEntity entity = this.worldInfo.getEntity(next);
+			if (entity instanceof Building) {
+				buildingList.add(next);
+			}else if (entity instanceof Human) {
+				humanList.add(next);
+			}
+		}
+		for (EntityID buildingID : buildingList ) {
+			Building building =(Building) this.worldInfo.getEntity(buildingID);
+			for (EntityID humanID : humanList) {
+				Human human = (Human) this.worldInfo.getEntity(humanID);
+				EntityID humanPositionID = human.getPosition();
+				if (humanPositionID.getValue() == building.getID().getValue()) {
+					Set<Road> entrances = this.staticInfoContainerModule.getEntrance().getEntrance(building);
+					for (Road entrance : entrances) {
+						if (entrance.isBlockadesDefined() && entrance.getBlockades().size() > 0) {
+							double dis = Ruler.getDistance(this.worldInfo.getLocation(entrance.getID()), this.worldInfo.getLocation(this.agentInfo.me()));
+							if (dis < 10000) {
+								move(router.getAStar((Human)this.agentInfo.me(), (Area)entrance, router.getPfCostFunction()));
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * @throws ActionCommandException
+	 *             move to coincidentCheckRefuge
+	 */
+	private void coincidentCheckRefuge() {
+		if (this.policeForceHelpInfos.getCoincidentRefuges().size() > 0) {
+			CostFunction costFunc = router.getPfCostFunction();
+			Pair<Integer, Integer> myLoc = this.worldInfo.getLocation(this.agentInfo.me());
+			Point selfL = new Point(myLoc.first(), myLoc.second());
+			lastCyclePath = router.getMultiDest(AgentTools.selfAreaPosition(this.agentInfo, this.worldInfo), 
+					this.policeForceHelpInfos.getCoincidentRefuges(),
+					costFunc, selfL);
+
+				EntityID destination = lastCyclePath
+						.get(lastCyclePath.size() - 1);
+
+			move(lastCyclePath);
+		}
+	}
+
+	private void coincidentHelpStuckedAgent() {
+		Pair<Integer, Integer> myLoc = this.worldInfo.getLocation(this.agentInfo.me());
+		
+		List<EntityID> needClearAgentIDList = getAgentOfCoincidentHelpStuckedAfent();
+		Human closetAgent = null;
+		double minDistance = Double.MAX_VALUE;
+		for (EntityID entityID : needClearAgentIDList) {
+			if (!this.worldInfo.getChanged().getChangedEntities().contains(entityID)) {
+				return;
+			}
+			Human agent = (Human) this.worldInfo.getEntity(entityID);
+			StandardEntity agentPosition = this.worldInfo.getEntity(agent.getPosition());
+			if (agentPosition instanceof Building && (agent.isBuriednessDefined() && agent.getBuriedness() > 0)) {
+
+				continue;
+			}
+
+			double dis = Ruler.getDistance(this.worldInfo.getLocation(agent), myLoc);
+			if (dis < minDistance) {
+				minDistance = dis;
+				closetAgent = agent;
+			}
+		}
+
+		if (closetAgent != null) {
+			
+			StandardEntity entity = this.worldInfo.getEntity(closetAgent.getPosition());
+			if (!(entity instanceof Area))
+				return;
+			Area agentLocation = (Area) entity;
+			
+			if (agentLocation instanceof Building) {
+				Building building = (Building) agentLocation;
+				Set<Road> entrancesOfStuckAgent = this.staticInfoContainerModule.getEntrance().getEntrance(building);
+				traversalRoads(entrancesOfStuckAgent);
+
+				return;
+			}
+
+			CostFunction costFunc = router.getPfCostFunction();
+			Point selfL = new Point(myLoc.first(), myLoc.second());
+			lastCyclePath = router.getAStar(AgentTools.selfAreaPosition(this.agentInfo, this.worldInfo),
+					agentLocation, costFunc, selfL);
+
+			move(lastCyclePath, closetAgent.getX(), closetAgent.getY());
+		}
+	}
+	
+	public List<EntityID> getAgentOfCoincidentHelpStuckedAfent() {
+		List<EntityID> needClearAgent = new ArrayList<>();
+		// changeset 中的at pf，
+		List<EntityID> inChangeSetAT_FB = new ArrayList<>();
+		// blockade
+		List<EntityID> inChangeSetBlockades = new ArrayList<>();
+
+		for (EntityID next : this.worldInfo.getChanged().getChangedEntities()) {
+			StandardEntity entity = this.worldInfo.getEntity(next);
+			if (entity instanceof AmbulanceTeam
+					|| entity instanceof FireBrigade) {
+				inChangeSetAT_FB.add(next);
+			} else if (entity instanceof Blockade) {
+				inChangeSetBlockades.add(next);
+			}
+		}
+		
+		for (EntityID agent_id : inChangeSetAT_FB) {
+			Human agent = (Human) this.worldInfo.getEntity(agent_id);
+			for (EntityID blockade_id : inChangeSetBlockades) {
+				Blockade blockade = (Blockade) this.worldInfo.getEntity(blockade_id);
+				double dis = Ruler.getDistanceToBlock(blockade,
+						new Point(agent.getX(), agent.getY()));
+				if (dis < 500) {
+					needClearAgent.add(agent_id);
+				}
+			}
+
+		}
+		
+		needClearAgent.addAll(this.policeForceHelpInfos.getStuckedAgents());
+		return needClearAgent;
+	}
+	
+	private void traversalRoads(Set<Road> roads) {
+		Pair<Integer, Integer> myLoc = this.worldInfo.getLocation(this.agentInfo.me());
+
+		if (roads.size() == 0) {
+			return;
+		}
+
+		CostFunction costFunc = router.getPfCostFunction();
+		Point selfL = new Point(myLoc.first(), myLoc.second());
+		lastCyclePath = router.getMultiAStar(AgentTools.selfAreaPosition(this.agentInfo, this.worldInfo), 
+				roads, costFunc, selfL);
+		Road destination = (Road) this.worldInfo.getEntity(lastCyclePath
+				.get(lastCyclePath.size() - 1));
+
+		roads.remove(destination);
+		this.policeForceHelpInfos.getTraversalEntranceSet().remove(destination);
+
+		this.policeForceHelpInfos.setClusterLastTaskType(PFClusterLastTaskEnum.TRAVERSAL_ENTRANCE);
+		this.policeForceHelpInfos.getTaskTarget().setTraversalEntrance(destination);
+		this.policeForceHelpInfos.getTaskTarget().setEntlityList(lastCyclePath);
+
+
+		move(lastCyclePath);
+	}
+	
+	/**
+	 * @throws ActionCommandException
+	 *             move to buiried agent ‘s entrance
+	 */
+	private void coincidentHelpBuriedAgent() {
+		Pair<Integer, Integer> myLoc = this.worldInfo.getLocation(this.agentInfo.me());
+		
+		if (this.policeForceHelpInfos.getCoincidentBuriedAgent().size() > 0) {
+			CostFunction costFunc = router.getPfCostFunction();
+			Point selfL = new Point(myLoc.first(), myLoc.second());
+
+			List<StandardEntity> dest = new ArrayList<>();
+
+			for (Human next : this.policeForceHelpInfos.getCoincidentBuriedAgent()) {
+				StandardEntity loca = this.worldInfo.getPosition(next);
+				if (loca instanceof Building) {
+					dest.addAll(this.staticInfoContainerModule.getEntrance()
+							.getEntrance((Building) loca));
+				}
+			}
+
+			lastCyclePath = router.getMultiDest(AgentTools.selfAreaPosition(this.agentInfo, this.worldInfo), 
+					dest, costFunc, selfL);
+
+			move(lastCyclePath);
+		}
 	}
 	
 	
@@ -292,7 +745,7 @@ public class ActionExtClear extends ExtAction
 					}
 					
 					//被困住的agent如果与自己在同一个area，则将这部分agent加入到needClearAgent中
-					for (EntityID entityID : this.stuckedAgents.getStuckedAgents()) {
+					for (EntityID entityID : this.policeForceHelpInfos.getStuckedAgents()) {
 
 						Human agent = (Human) this.worldInfo.getEntity(entityID);
 						if(agent.getID()==this.agentInfo.me().getID())///////////////////////
@@ -351,25 +804,27 @@ public class ActionExtClear extends ExtAction
 							{
 								StandardEntity se = AgentTools.selfPosition(this.agentInfo, this.worldInfo);
 								Area ro=(Area) se;
-								for(EntityID e:ro.getBlockades())
-								{
-									StandardEntity en = this.worldInfo.getEntity(e);
-									Blockade nearesttBlockade = null;
-									double minnDistance = Double.MAX_VALUE;
-									if(en instanceof Blockade)
+								if(ro != null) {
+									for(EntityID e : ro.getBlockades())
 									{
-										Blockade bloc=(Blockade) en;
-										double dis = AgentTools.getDistanceToBlockade(bloc, x, y);
-										
-										if (dis < minnDistance) {
-											minnDistance = dis;
-											nearesttBlockade = bloc;
-										}
-										if(nearesttBlockade!=null)
+										StandardEntity en = this.worldInfo.getEntity(e);
+										Blockade nearesttBlockade = null;
+										double minnDistance = Double.MAX_VALUE;
+										if(en instanceof Blockade)
 										{
-											destX=nearesttBlockade.getX();
-											destY=nearesttBlockade.getY();
-											break;
+											Blockade bloc=(Blockade) en;
+											double dis = AgentTools.getDistanceToBlockade(bloc, x, y);
+											
+											if (dis < minnDistance) {
+												minnDistance = dis;
+												nearesttBlockade = bloc;
+											}
+											if(nearesttBlockade!=null)
+											{
+												destX=nearesttBlockade.getX();
+												destY=nearesttBlockade.getY();
+												break;
+											}
 										}
 									}
 								}
@@ -624,7 +1079,7 @@ public class ActionExtClear extends ExtAction
 						}
 
 					}
-					for (EntityID entityID : this.stuckedAgents.getStuckedAgents()) {
+					for (EntityID entityID : this.policeForceHelpInfos.getStuckedAgents()) {
 					//	System.out.println("stuckedagents");///////////
 						Human agent = (Human) this.worldInfo.getEntity(entityID);
 						if ((this.worldInfo.getEntity(agent.getPosition())) instanceof Building) {
@@ -633,7 +1088,7 @@ public class ActionExtClear extends ExtAction
 							needClearAgent.add(entityID);
 							
 					}
-					needClearAgent.addAll(this.stuckedAgents.getStuckedAgents());
+					needClearAgent.addAll(this.policeForceHelpInfos.getStuckedAgents());
 				//	System.out.println("getstuckedagents:"+world.getStuckedAgents());///////////
 					EntityID closetAgentID = null;
 					double mindis = Double.MAX_VALUE;
