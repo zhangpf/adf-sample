@@ -14,7 +14,7 @@ import NUDT.module.algorithm.pathplanning.pov.graph.PassableDictionary;
 import NUDT.module.algorithm.pathplanning.pov.graph.PointOfVisivility;
 import NUDT.module.algorithm.pathplanning.pov.graph.PassableDictionary.PassableLevel;
 import NUDT.module.algorithm.pathplanning.pov.reachable.UFTReachableArea;
-import NUDT.utils.EntityTools;
+import NUDT.utils.extendTools.EntityTools;
 import adf.agent.develop.DevelopData;
 import adf.agent.info.AgentInfo;
 import adf.agent.info.ScenarioInfo;
@@ -35,9 +35,7 @@ public class POVRouter extends PathPlanning {
     private Collection<EntityID> targets;
     private List<EntityID> result;
 	
-	
 	private final PassableDictionary passableDic;
-//	private BFSReachableArea bfsReachable;
 	private final UFTReachableArea uftReachable;
 	private final PointOfVisivility pov;
 	private final POVSearch search;
@@ -61,7 +59,7 @@ public class POVRouter extends PathPlanning {
 		super(ai, wi, si, moduleManager, developData);
 		// public POVRouter(Human me, AdvancedWorldModel world) {
 		
-		pov = new PointOfVisivility(this.worldInfo.getRawWorld());
+		pov = new PointOfVisivility(this.worldInfo);
 		passableDic = new PassableDictionary(this.agentInfo, this.scenarioInfo, this.worldInfo);
 //		bfsReachable = new BFSReachableArea(world);
 		uftReachable = new UFTReachableArea(this.worldInfo);
@@ -79,13 +77,7 @@ public class POVRouter extends PathPlanning {
 	
 	public void update(final EntityID pos, final Set<EntityID> visibleEntitiesID) {
 		Set<EdgeNode> newPassables = passableDic.update(pos, this, visibleEntitiesID);
-//		if (bfsReachable != null) {
-//			try {
-//				bfsReachable.update(pov.get(pos), world);
-//			} catch (IllegalStateException e) {
-//				bfsReachable = null;
-//			}
-//		}
+
 		if (uftReachable != null) {
 			uftReachable.update(this.agentInfo, this.scenarioInfo, this, newPassables, this.worldInfo);
 		}
@@ -131,7 +123,6 @@ public class POVRouter extends PathPlanning {
 	public List<EntityID> getMultiDest(Area origin, 
 			Collection<? extends StandardEntity> destinations, CostFunction costFunc, Point start) {
 		return getMultiAStar(origin, destinations, costFunc, start);
-		//return getDijkstra(origin, new HashSet<StandardEntity>(destinations), costFunc);
 	}
 
 	// unused path searcher
@@ -212,9 +203,6 @@ public class POVRouter extends PathPlanning {
 	 * @return true if the target area is sure reachable. Otherwise, false.
 	 */
 	public boolean isSureReachable(EntityID id) {
-//		if (bfsReachable != null) {
-//			return bfsReachable.isSureReachable(id);
-//		}
 		if (uftReachable != null) {
 			try {
 				EntityID position = this.worldInfo.getPosition(this.agentInfo.me().getID()).getID();///
@@ -226,41 +214,6 @@ public class POVRouter extends PathPlanning {
 		}
 		return false;
 	}
-	
-//	/**
-//	 * Determines whether a area is passable.
-//	 * <p>
-//	 * Areas with {@link PassableLevel#SURE_PASSABLE SURE_PASSABLE},
-//	 * {@link PassableLevel#COMMUNICATION_PASSABLE COMMUNICATION_PASSABLE},
-//	 * {@link PassableLevel#LOGICAL_PASSABLE LOGICAL_PASSABLE} and
-//	 * {@link PassableLevel#UNKNOWN UNKNOWN} are passable areas.
-//	 * 
-//	 * @param area
-//	 *            the target area
-//	 * @return true if the target area is sure reachable. Otherwise, false.
-//	 */
-//	public boolean isReachable(Area area) {
-//		return isReachable(area.getID());
-//	}
-//	
-//	/**
-//	 * Determines whether a area is passable.
-//	 * <p>
-//	 * Areas with {@link PassableLevel#SURE_PASSABLE SURE_PASSABLE},
-//	 * {@link PassableLevel#COMMUNICATION_PASSABLE COMMUNICATION_PASSABLE},
-//	 * {@link PassableLevel#LOGICAL_PASSABLE LOGICAL_PASSABLE} and
-//	 * {@link PassableLevel#UNKNOWN UNKNOWN} are passable areas.
-//	 * 
-//	 * @param id
-//	 *            the target area
-//	 * @return true if the target area is sure reachable. Otherwise, false.
-//	 */
-//	public boolean isReachable(EntityID id) {
-//		if (bfsReachable != null) {
-//			return bfsReachable.isReachable(id);
-//		}
-//		return false;
-//	}
 	
 	/**
 	 * Get the number of edges with given <code>PassableLevel</code> of the
@@ -315,6 +268,10 @@ public class POVRouter extends PathPlanning {
 	}
 
 	
+	/**
+	 * 根据agent类型与this.targets确定要使用的CostFunction
+	 * @return
+	 */
 	private CostFunction getCostFunc()
 	{
 		CostFunction cf;
@@ -345,10 +302,6 @@ public class POVRouter extends PathPlanning {
 		}
 		return cf;
 	}
-	
-	
-	
-	//derived from PathPlanning
 	
 	
 	@Override
@@ -390,7 +343,7 @@ public class POVRouter extends PathPlanning {
 				}
 				else if(from_entity instanceof Human)
 				{
-					this.result = getAStar((Human)this.agentInfo.me(), (Area)target_entity, this.getCostFunc());
+					this.result = getAStar((Human)from_entity, (Area)target_entity, this.getCostFunc());
 				}
 			}
 		}
@@ -410,9 +363,13 @@ public class POVRouter extends PathPlanning {
 			}
 			else if(from_entity instanceof Human)
 			{
-				
+				StandardEntity positionOfFromEntity = this.worldInfo.getPosition(this.from);
+				if(positionOfFromEntity != null && positionOfFromEntity instanceof Area) 
+				{
+					this.result = this.getMultiAStar((Area)positionOfFromEntity, targetentities, 
+							this.getCostFunc(), new Point(mypos.first().intValue(), mypos.second().intValue()));
+				}
 			}
-			
 		}
 		return this;
 	}

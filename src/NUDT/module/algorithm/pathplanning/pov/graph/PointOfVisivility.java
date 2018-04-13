@@ -3,7 +3,7 @@ package NUDT.module.algorithm.pathplanning.pov.graph;
 import java.util.Collection;
 import java.util.HashMap;
 
-import rescuecore2.standard.entities.StandardWorldModel;
+import adf.agent.info.WorldInfo;
 import rescuecore2.worldmodel.EntityID;
 
 /**
@@ -21,8 +21,8 @@ public class PointOfVisivility {
 	final private PointNode[] points;
 	final private HashMap<EntityID, AreaNode> idToArea;
 	
-	public PointOfVisivility(final StandardWorldModel world) {
-		POVBuilder builder = new POVBuilder(world);
+	public PointOfVisivility(final WorldInfo wi) {
+		POVBuilder builder = new POVBuilder(wi);
 		points = builder.getPointsResult();
 		idToArea = builder.getIdToAreaResult();
 	}

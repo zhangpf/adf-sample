@@ -1,4 +1,4 @@
-package NUDT.module.complex.utils;
+package NUDT.utils.extendTools.test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -13,7 +13,7 @@ import org.junit.Test;
 import rescuecore2.misc.geometry.Line2D;
 import rescuecore2.misc.geometry.Point2D;
 import rescuecore2.standard.entities.Edge;
-import NUDT.module.complex.utils.RoadTools;
+import NUDT.utils.extendTools.RoadTools;
 
 public class TestRoadTools {
 

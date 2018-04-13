@@ -126,6 +126,7 @@ public class Ruler {
 	
 	/**
 	 * 计算点到多边形的距离
+	 * 如果点在多边形内部，返回0
 	 * @param polygon
 	 * @param location
 	 * @return
@@ -138,6 +139,7 @@ public class Ruler {
 
 	/**
 	 * 计算点到多边形的距离
+	 * 如果点在多边形内部，返回0
 	 * @param polygon
 	 * @param point
 	 * @return
@@ -149,7 +151,8 @@ public class Ruler {
 	}
 	
 	/**
-	 * 计算点到多边形的距离
+	 * 计算点到多边形的距离,
+	 * 如果点在多边形内部，返回0
 	 * @param polygon
 	 * @param point
 	 * @return
@@ -355,8 +358,8 @@ public class Ruler {
 	}
 
 	/**
-	 * 返回指定点到blockade的距离
-	 * 实际为点到多边形的距离
+	 * 返回指定点到blockade的距离，
+	 * 实际为点到多边形各边距离的最小值
 	 * @param b
 	 * @param x
 	 * @param y

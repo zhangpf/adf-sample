@@ -15,8 +15,8 @@ import NUDT.utils.AgentConstants;
 import NUDT.module.algorithm.pathplanning.pov.POVPath;
 import NUDT.module.algorithm.pathplanning.pov.POVRouter;
 import NUDT.utils.SetPair;
-import NUDT.module.complex.utils.RoadTools;
-import NUDT.module.complex.utils.WorldTools;
+import NUDT.utils.extendTools.RoadTools;
+import NUDT.utils.extendTools.WorldTools;
 import adf.agent.info.AgentInfo;
 import adf.agent.info.ScenarioInfo;
 import adf.agent.info.WorldInfo;
@@ -77,7 +77,7 @@ public class PassableDictionary {
 		this.ai = ai;
 		this.si = si;
 		this.wi = wi;
-		int areaSize = WorldTools.getEntitiesOfType(AgentConstants.AREAS, wi.getRawWorld()).size();
+		int areaSize = WorldTools.getEntitiesOfType(AgentConstants.AREAS, wi).size();
 		
 		passableMap = new HashMap<SetPair<PointNode, PointNode>, PassableLevel>(areaSize * 2) {
 			@Override
@@ -248,7 +248,7 @@ public class PassableDictionary {
 			Human human = (Human) wi.getEntity(agentPreArea.first());
 			if (!human.isPositionDefined()) 
 				continue;
-			StandardEntity currentArea = human.getPosition(wi.getRawWorld());
+			StandardEntity currentArea = wi.getPosition(human);
 			StandardEntity pastArea = wi.getEntity(agentPreArea.second());
 			
 			if (currentArea instanceof Area && pastArea != null) {
@@ -275,10 +275,10 @@ public class PassableDictionary {
 			}
 		}
 		preAgentArea.clear();
-		for (StandardEntity se : WorldTools.getEntitiesOfType(AgentConstants.HUMANOIDS, wi.getRawWorld())) {
+		for (StandardEntity se : WorldTools.getEntitiesOfType(AgentConstants.HUMANOIDS, wi)) {
 			Human human = (Human) se;
 			if (human.isPositionDefined()) {
-				StandardEntity currentArea = human.getPosition(wi.getRawWorld());
+				StandardEntity currentArea = wi.getPosition(human);
 				if (currentArea instanceof Area) { 
 					preAgentArea.add(new Pair<EntityID, EntityID>(human.getID(), currentArea.getID()));
 				}

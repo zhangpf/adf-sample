@@ -1,12 +1,15 @@
-package NUDT.utils;
+package NUDT.utils.extendTools;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import adf.agent.info.AgentInfo;
 import adf.agent.info.WorldInfo;
 import javolution.util.FastSet;
+import rescuecore2.misc.Pair;
+import rescuecore2.standard.entities.Area;
 import rescuecore2.standard.entities.Blockade;
 import rescuecore2.standard.entities.Building;
 import rescuecore2.standard.entities.Human;
@@ -17,6 +20,16 @@ import rescuecore2.worldmodel.EntityID;
 
 public class EntityTools {
 
+	public static Area getArea(EntityID entityID, WorldInfo wi)
+	{
+		StandardEntity entity = wi.getEntity(entityID);
+		if(entity instanceof Area)
+		{
+			return (Area)entity;
+		}
+		return null;
+	}
+	
 	public static Building getBuilding(EntityID entityID, WorldInfo wi)
 	{
 		StandardEntity entity = wi.getEntity(entityID);
@@ -53,6 +66,22 @@ public class EntityTools {
 			return (Human)entity;
 		}
 		return null;
+	}
+	
+	/**
+	 * 得到自身所在entity
+	 * @param ai
+	 * @param wi
+	 * @return
+	 */
+	public static StandardEntity getSelfPosition(AgentInfo ai, WorldInfo wi)
+	{
+		return wi.getPosition(ai.me().getID());
+	}
+	
+	public static Pair<Integer, Integer> getSeftLocation(AgentInfo ai, WorldInfo wi)
+	{
+		return wi.getLocation(ai.me());
 	}
 	
 	/** Convert EntityID list to integer list.*/

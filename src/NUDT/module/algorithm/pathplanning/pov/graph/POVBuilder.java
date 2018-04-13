@@ -10,12 +10,12 @@ import java.util.Set;
 
 import NUDT.utils.AgentConstants;
 import NUDT.utils.IdSorter;
-import NUDT.module.complex.utils.WorldTools;
+import adf.agent.info.WorldInfo;
+import NUDT.utils.extendTools.WorldTools;
 import rescuecore2.misc.Pair;
 import rescuecore2.standard.entities.Area;
 import rescuecore2.standard.entities.Edge;
 import rescuecore2.standard.entities.StandardEntity;
-import rescuecore2.standard.entities.StandardWorldModel;
 import rescuecore2.worldmodel.EntityID;
 
 /**
@@ -45,10 +45,10 @@ class POVBuilder {
 	};
 	
 	// constructor
-	POVBuilder(final StandardWorldModel world) {
-		List<PointNode> basePoints = createBasics(world);
+	POVBuilder(final WorldInfo wi) {
+		List<PointNode> basePoints = createBasics(wi);
 		points = new PointNode[basePoints.size()];
-		idToArea = new HashMap<EntityID, AreaNode>(WorldTools.getEntitiesOfType(AgentConstants.AREAS, world).size());
+		idToArea = new HashMap<EntityID, AreaNode>(WorldTools.getEntitiesOfType(AgentConstants.AREAS, wi).size());
 		
 		for (int i = 0; i < points.length; i++) {
 			PointNode p = basePoints.get(i);
@@ -83,11 +83,11 @@ class POVBuilder {
 		}
 	}
 	
-	private List<PointNode> createBasics(final StandardWorldModel world) {
+	private List<PointNode> createBasics(final WorldInfo wi) {
 		HashMap<EntityID, AreaNodeBase> areaBases = new HashMap<EntityID, AreaNodeBase>();
 		Set<Pair<EntityID, EntityID>> fromtoTuples = new HashSet<Pair<EntityID, EntityID>>();
 		
-		ArrayList<StandardEntity> areas = new ArrayList<>(WorldTools.getEntitiesOfType(AgentConstants.AREAS, world));
+		ArrayList<StandardEntity> areas = new ArrayList<>(WorldTools.getEntitiesOfType(AgentConstants.AREAS, wi));
 		
 		Collections.sort(areas, new IdSorter());
 		
@@ -104,8 +104,8 @@ class POVBuilder {
 		List<PointNode> points = new ArrayList<PointNode>(areaBases.values());
 		
 		for (Pair<EntityID, EntityID> tuple : fromtoTuples) {
-			final Area area1 = (Area) world.getEntity(tuple.first());
-			final Area area2 = (Area) world.getEntity(tuple.second());
+			final Area area1 = (Area) wi.getEntity(tuple.first());
+			final Area area2 = (Area) wi.getEntity(tuple.second());
 			if (area1 == null || area2 == null) 
 				continue;
 			

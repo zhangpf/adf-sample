@@ -1,7 +1,8 @@
-package NUDT.module.complex.utils;
+package NUDT.utils.extendTools;
 
 import java.awt.Point;
 import java.awt.Polygon;
+import java.awt.geom.Area;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -16,16 +17,18 @@ import NUDT.utils.Ruler;
 import NUDT.utils.Util;
 import NUDT.utils.geom.ExpandApexes;
 import NUDT.utils.MathTools;
-import NUDT.utils.EntityTools;
+import NUDT.utils.extendTools.EntityTools;
 
 import adf.agent.info.WorldInfo;
 import rescuecore2.standard.entities.Road;
+import rescuecore2.standard.entities.StandardEntity;
 import rescuecore2.worldmodel.EntityID;
 import rescuecore2.misc.geometry.GeometryTools2D;
 import rescuecore2.misc.geometry.Line2D;
 import rescuecore2.misc.geometry.Point2D;
 import rescuecore2.misc.Pair;
 import rescuecore2.standard.entities.Blockade;
+import rescuecore2.standard.entities.Building;
 import rescuecore2.standard.entities.Edge;
 
 public class RoadTools {
@@ -523,5 +526,110 @@ public class RoadTools {
 		else
 			return false;
 	}
+	
+	/**
+	 * 判断一个“entrance”是否需要Clear
+	 * @param road 某个建筑的"entrance"
+	 * @return true when this entrance is need to clear.
+	 * 140824 true -- dont need ,false -- need
+	 */
+	public static boolean isNeedlessToClear(Road road, WorldInfo wi) {
+		if(road == null) return true;
+		
+		double buildingEntranceLength = 0.0;
+		double maxUnpassableEdgeLength = Double.MIN_VALUE;
+		double length;
+		
+		Edge buildingEntrance = null;
+		
+		//building的边
+		for (Edge next : road.getEdges()) {
+			//可以通过的边
+			if (next.isPassable()) {
+				StandardEntity entity = wi.getEntity(next.getNeighbour());
+				if (entity instanceof Building) {
+					buildingEntranceLength = Ruler.getDistance(next.getStart(), next.getEnd());
+					buildingEntrance = next;
+				}
+			} 
+			else {
+				length = Ruler.getDistance(next.getStart(), next.getEnd());
+				if (length > maxUnpassableEdgeLength) {
+					maxUnpassableEdgeLength = length;
+				}
+			}
+		}
+		
+		if (buildingEntrance == null)
+			return true;
+		double rad = buildingEntranceLength + maxUnpassableEdgeLength;
+		Area entranceArea = entranceArea(buildingEntrance.getLine(), rad);
+		
+		/**
+		 * entrance的路障与entrance的“road邻居”的路障集合
+		 */
+		Set<EntityID> blockadeIds = new HashSet<>();
+		
+		if (road.isBlockadesDefined()) {
+			blockadeIds.addAll(road.getBlockades());
+		}
+		
+		for (EntityID next : road.getNeighbours()) {
+			StandardEntity entity = wi.getEntity(next);
+			if (entity instanceof Road) {
+				Road curRoad = (Road) entity;
+				if (curRoad.isBlockadesDefined()) 
+					blockadeIds.addAll(curRoad.getBlockades());
+			}
+		}
+		
+		for (EntityID next : blockadeIds) {
+			Blockade blockade = EntityTools.getBlockade(next, wi);
+			if(blockade == null)
+				continue;
+			
+			if (!blockade.isApexesDefined())
+				continue;
+			//不构成多边形的blockade不用考虑
+			if (blockade.getApexes().length < 6)
+				continue;
+			
+			Polygon po = Util.getPolygon(blockade.getApexes());
+			Area blocArea = new Area(po);
+			blocArea.intersect(entranceArea);
+			//blocArea与entranceArea交集非空，即blockade挡住了entrance
+			if (!blocArea.getPathIterator(null).isDone())
+				return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * 得到以line为中间线的矩形，矩形宽为2*rad
+	 * @param line
+	 * @param rad
+	 * @return
+	 */
+	private static Area entranceArea(Line2D line, double rad) {
+		double theta = Math.atan2(line.getEndPoint().getY() - line.getOrigin().getY(), 
+				line.getEndPoint().getX() - line.getOrigin().getX());
+		theta = theta - Math.PI / 2;
+		while (theta > Math.PI || theta < -Math.PI) {
+			if (theta > Math.PI)
+				theta -= 2 * Math.PI;
+			else
+				theta += 2 * Math.PI;
+		}
+		int x = (int)(rad * Math.cos(theta)), y = (int)(rad * Math.sin(theta));
+		
+		Polygon polygon = new Polygon();
+		polygon.addPoint((int)(line.getOrigin().getX() + x), (int)(line.getOrigin().getY() + y));
+		polygon.addPoint((int)(line.getEndPoint().getX() + x), (int)(line.getEndPoint().getY() + y));
+		polygon.addPoint((int)(line.getEndPoint().getX() - x), (int)(line.getEndPoint().getY() - y));
+		polygon.addPoint((int)(line.getOrigin().getX() - x), (int)(line.getOrigin().getY() - y));
+		
+		return new Area(polygon);
+	}
+	
 	
 }

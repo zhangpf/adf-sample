@@ -9,7 +9,7 @@ import NUDT.module.algorithm.pathplanning.pov.POVRouter;
 import NUDT.module.algorithm.pathplanning.pov.graph.AreaNode;
 import NUDT.module.algorithm.pathplanning.pov.graph.EdgeNode;
 import NUDT.module.algorithm.pathplanning.pov.graph.PassableDictionary;
-import NUDT.module.complex.utils.WorldTools;
+import NUDT.utils.extendTools.WorldTools;
 import NUDT.utils.UnionFindTree;
 import adf.agent.info.AgentInfo;
 import adf.agent.info.ScenarioInfo;
@@ -29,7 +29,7 @@ public class UFTReachableArea {
 	
 	public UFTReachableArea(final WorldInfo wi) {
 		
-		Collection<StandardEntity> areas = WorldTools.getEntitiesOfType(AgentConstants.AREAS, wi.getRawWorld());
+		Collection<StandardEntity> areas = WorldTools.getEntitiesOfType(AgentConstants.AREAS, wi);
 		ArrayList<EntityID> ids = new ArrayList<EntityID>(areas.size());
 		for (StandardEntity se : areas) {
 			ids.add(se.getID());

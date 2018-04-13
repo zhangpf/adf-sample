@@ -1,4 +1,4 @@
-package NUDT.module.complex.utils;
+package NUDT.utils.extendTools;
 
 import java.util.Collection;
 import java.util.EnumSet;
@@ -26,12 +26,10 @@ import rescuecore2.worldmodel.Property;
  */
 public class WorldTools {
 	
-	
-	
-	public static Collection<StandardEntity> getEntitiesOfType(EnumSet<StandardEntityURN> urns, StandardWorldModel world) {
+	public static Collection<StandardEntity> getEntitiesOfType(EnumSet<StandardEntityURN> urns, WorldInfo wi) {
 		Collection<StandardEntity> res = new HashSet<StandardEntity>();
 		for (StandardEntityURN urn : urns) {
-			res.addAll(world.getEntitiesOfType(urn));
+			res.addAll(wi.getEntitiesOfType(urn));
 		}
 		return res;
 	}
