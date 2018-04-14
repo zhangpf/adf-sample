@@ -92,6 +92,7 @@ public class ActionExtClear extends ExtAction
 		this.policeForceHelpInfos = new PoliceForceHelpInfos(ai, wi, si, moduleManager, developData, this.staticInfoContainerModule.getEntrance());
 		this.posAndLocHistory = new PosAndLocHistory(ai, wi, si, moduleManager, developData);
 	
+		this.random = new Random();
 		//实际并没有registerModule，手动更新这些子模块
 	}
 	
@@ -244,7 +245,8 @@ public class ActionExtClear extends ExtAction
 	 */
 	protected void careSelf() {
 		Human me = EntityTools.getHuman(this.agentInfo.me().getID(), this.worldInfo);
-		if (me.getHP() - me.getDamage() * (this.scenarioInfo.getKernelTimesteps() - time) < 16) {
+		//if (me.getHP() - me.getDamage() * (this.scenarioInfo.getKernelTimesteps() - time) < 16) {
+		if (me.getHP() - me.getDamage() * (300 - time) < 16) {
 			moveToRefuge();
 		}
 	}
@@ -323,7 +325,12 @@ public class ActionExtClear extends ExtAction
 		if (time < this.scenarioInfo.getKernelAgentsIgnoreuntil() + 2)
 			return false;
 		
-		
+		if(this.agentInfo.getExecutedAction(time-1).getCommand(this.agentInfo.me().getID(), time-1) == null ||
+				this.agentInfo.getExecutedAction(time-2).getCommand(this.agentInfo.me().getID(), time-2) == null)
+		{
+			return false;
+		}
+			
 		if (this.agentInfo.getExecutedAction(time-1).getCommand(this.agentInfo.me().getID(), time-1).getURN().equals(StandardMessageURN.AK_MOVE) &&
 				this.agentInfo.getExecutedAction(time-2).getCommand(this.agentInfo.me().getID(), time-2).getURN().equals(StandardMessageURN.AK_MOVE)) {
 			
