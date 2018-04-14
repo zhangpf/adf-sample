@@ -9,18 +9,13 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-import org.apache.commons.math3.ode.nonstiff.ThreeEighthesIntegrator;
-import org.jaxen.util.SelfAxisIterator;
-
 import NUDT.module.DynamicInfoContainer.CriticalArea;
 import NUDT.module.DynamicInfoContainer.PoliceForceHelpInfos;
 import NUDT.module.DynamicInfoContainer.PosAndLocHistory;
-import NUDT.module.DynamicInfoContainer.StuckedAgents;
 import NUDT.module.StaticInfoContainer.StaticInfoContainerModule;
 import NUDT.module.algorithm.pathplanning.pov.POVRouter;
 import NUDT.utils.extendTools.EntityTools;
 import NUDT.utils.extendTools.RoadTools;
-import NUDT.utils.extendTools.WorldTools;
 import NUDT.utils.extendTools.AgentTools;
 import NUDT.utils.Ruler;
 import NUDT.utils.Util;
@@ -46,16 +41,14 @@ import rescuecore2.misc.Pair;
 
 import adf.agent.action.common.ActionMove;
 import adf.agent.action.police.ActionClear;
+import adf.agent.communication.MessageManager;
 import adf.agent.develop.DevelopData;
 import adf.agent.info.AgentInfo;
 import adf.agent.info.ScenarioInfo;
 import adf.agent.info.WorldInfo;
 import adf.agent.module.ModuleManager;
 import adf.component.extaction.ExtAction;
-import csu.agent.Agent.ActionCommandException;
-import csu.model.AgentConstants;
 import NUDT.module.algorithm.pathplanning.pov.CostFunction;
-import NUDT.utils.extendTools.PoliceForceTools.PFLastTaskType;
 import NUDT.utils.extendTools.PoliceForceTools.PFLastTaskType.PFClusterLastTaskEnum;
 import NUDT.utils.extendTools.PoliceForceTools.PoliceForceTools;
 
@@ -84,9 +77,23 @@ public class ActionExtClear extends ExtAction
 	protected PosAndLocHistory posAndLocHistory;
 	protected POVRouter router;
 	
-	protected Random random;
 	//Static Infos
 	protected StaticInfoContainerModule staticInfoContainerModule;
+
+	protected Random random;
+	
+	public ActionExtClear(AgentInfo ai, WorldInfo wi, ScenarioInfo si, ModuleManager moduleManager,
+			DevelopData developData)
+	{
+		super(ai, wi, si, moduleManager, developData);
+		this.router = new POVRouter(ai, wi, si, moduleManager, developData);
+		this.criticalArea = new CriticalArea(ai, wi, si, moduleManager, developData);
+		this.staticInfoContainerModule = new StaticInfoContainerModule(ai, wi, si, moduleManager, developData);
+		this.policeForceHelpInfos = new PoliceForceHelpInfos(ai, wi, si, moduleManager, developData, this.staticInfoContainerModule.getEntrance());
+		this.posAndLocHistory = new PosAndLocHistory(ai, wi, si, moduleManager, developData);
+	
+		//实际并没有registerModule，手动更新这些子模块
+	}
 	
 	public ActionExtClear(AgentInfo ai, WorldInfo wi, ScenarioInfo si, ModuleManager moduleManager,
 			DevelopData developData, CriticalArea ca, PoliceForceHelpInfos pfhis, StaticInfoContainerModule sicm,
@@ -108,6 +115,25 @@ public class ActionExtClear extends ExtAction
 		
 		this.repairDistance = this.scenarioInfo.getClearRepairDistance();
 	}
+	
+	@Override
+    public ExtAction updateInfo(MessageManager messageManager)
+    {
+        super.updateInfo(messageManager);
+        if (this.getCountUpdateInfo() >= 2)
+        {
+            return this;
+        }
+        
+        //update self-submodules
+        this.router.update(this.worldInfo.getPosition(this.agentInfo.me().getID()).getID(),
+        		AgentTools.getVisibleEntities(this.worldInfo));
+        this.posAndLocHistory.updateInfo(messageManager);
+        this.criticalArea.update(this.router);
+        this.policeForceHelpInfos.Update();
+        
+        return this;
+    }
 	
 	public void updateClearPath(List<EntityID> path) {
 		this.lastCyclePath = path;
@@ -155,19 +181,18 @@ public class ActionExtClear extends ExtAction
 
 		this.updateClearPath(lastCyclePath);
 		this.clear();
+		
 		// 继续上次任务
-		this.continueLastTask();
-		this.traversalRefuge();
+		//this.continueLastTask();
+		//this.traversalRefuge();
 
-		this.helpBuriedAgent();
-		this.helpStuckAgent();
-		// 更替
-		// this.searchingBurningBuilding();
-		this.searchingBurningBuildingCritical();
-		// this.traversalCritical();
-		this.helpBuriedHumans();
-		this.traversalEntrance();
-		this.expandCluster();
+		//this.helpBuriedAgent();
+		//this.helpStuckAgent();
+		//this.searchingBurningBuildingCritical();
+		
+		//this.helpBuriedHumans();
+		//this.traversalEntrance();
+		//this.expandCluster();
 		this.randomWalk();
 		
 
@@ -485,8 +510,7 @@ public class ActionExtClear extends ExtAction
 					this.policeForceHelpInfos.getCoincidentRefuges(),
 					costFunc, selfL);
 
-				EntityID destination = lastCyclePath
-						.get(lastCyclePath.size() - 1);
+				EntityID destination = lastCyclePath.get(lastCyclePath.size() - 1);
 
 			move(lastCyclePath);
 		}

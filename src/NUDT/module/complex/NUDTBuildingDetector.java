@@ -23,9 +23,9 @@ import rescuecore2.worldmodel.EntityID;
 
 import java.util.*;
 
-import NUDT.module.complex.utils.FireBrigadeTools.EnergyFlow;
-import NUDT.module.complex.utils.FireBrigadeTools.FireBrigadeTools;
-import NUDT.module.complex.utils.WorldTools;
+import NUDT.utils.extendTools.FireBrigadeTools.EnergyFlow;
+import NUDT.utils.extendTools.FireBrigadeTools.FireBrigadeTools;
+import NUDT.utils.extendTools.WorldTools;
 
 import static rescuecore2.standard.entities.StandardEntityURN.*;
 

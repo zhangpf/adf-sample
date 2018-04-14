@@ -2,6 +2,9 @@ package NUDT.utils.extendTools;
 
 import java.awt.Point;
 import java.awt.Polygon;
+import java.util.Set;
+
+import org.jfree.data.statistics.HistogramBin;
 
 import NUDT.utils.Ruler;
 import NUDT.utils.Util;
@@ -37,6 +40,13 @@ public class AgentTools {
 	public static boolean canSee(EntityID entityID, WorldInfo wi)
 	{
 		return wi.getChanged().getChangedEntities().contains(entityID);
+	}
+	
+	public static Set<EntityID> getVisibleEntities(WorldInfo wi)
+	{
+		if(wi.getChanged() != null)
+			return wi.getChanged().getChangedEntities();
+		return null;
 	}
 	
 	/**

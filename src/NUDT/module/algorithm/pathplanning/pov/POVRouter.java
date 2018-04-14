@@ -57,22 +57,20 @@ public class POVRouter extends PathPlanning {
 
 	public POVRouter(AgentInfo ai, WorldInfo wi, ScenarioInfo si, ModuleManager moduleManager, DevelopData developData) {
 		super(ai, wi, si, moduleManager, developData);
-		// public POVRouter(Human me, AdvancedWorldModel world) {
 		
-		pov = new PointOfVisivility(this.worldInfo);
-		passableDic = new PassableDictionary(this.agentInfo, this.scenarioInfo, this.worldInfo);
-//		bfsReachable = new BFSReachableArea(world);
-		uftReachable = new UFTReachableArea(this.worldInfo);
+		this.pov = new PointOfVisivility(this.worldInfo);
+		this.passableDic = new PassableDictionary(this.agentInfo, this.scenarioInfo, this.worldInfo);
+		this.uftReachable = new UFTReachableArea(this.worldInfo);
 	
 		final int routeThinkTime = (int)this.scenarioInfo.getKernelAgentsThinkTime() * 2 / 3;
-		;
-		search = new POVSearch(routeThinkTime, pov);
+
+		this.search = new POVSearch(routeThinkTime, pov);
 		
-		normalFunc = CostFunctionFactory.normal(passableDic, wi);
-		strictFunc = CostFunctionFactory.strict(passableDic, wi);
-		searchFunc = CostFunctionFactory.search(passableDic, wi);
+		this.normalFunc = CostFunctionFactory.normal(passableDic, wi);
+		this.strictFunc = CostFunctionFactory.strict(passableDic, wi);
+		this.searchFunc = CostFunctionFactory.search(passableDic, wi);
 		
-		pfFunc = CostFunctionFactory.pf();
+		this.pfFunc = CostFunctionFactory.pf();
 	}
 	
 	public void update(final EntityID pos, final Set<EntityID> visibleEntitiesID) {

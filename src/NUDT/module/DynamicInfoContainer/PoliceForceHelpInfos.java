@@ -53,7 +53,7 @@ public class PoliceForceHelpInfos extends AbstractModule {
 		this.visitedBuriedAgent = new HashSet<>();
 		
 		this.traversalEntranceSet = new HashSet<>();
-		
+		this.taskTarget = new PFLastTaskTarget();
 	}
 
 	

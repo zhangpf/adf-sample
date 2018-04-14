@@ -10,6 +10,7 @@ import adf.component.module.AbstractModule;
 
 /**
  * 存储静态信息的模块，信息只在初始化时构造好，不会随着模拟周期的变化而变化
+ * 所有类型的agent均可携带的静态信息
  * @author gxd
  */
 public class StaticInfoContainerModule extends AbstractModule {
